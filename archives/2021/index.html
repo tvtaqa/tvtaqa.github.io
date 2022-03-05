@@ -354,6 +354,64 @@
     
     
     <article class="index-post">
+        <a class="abstract-title" href = "/2021/09/29/Back-off-restarting-failed-container/" >
+            
+                <span>Back-off restarting failed container</span>
+        </a>
+        <div class="abstract-content">
+            问题描述K8s中部署pod时，遇到Back-off restarting failed container。容器不断地重启
+高赞回答都是：加入command: [“/bin/bash”, “-ce”, “tail -f /dev/null”]
+对此的解释是容器关闭并重启是因为 没有前台任务的执行。
+然而自己尝试上述的方法并没有解决。
+解决方式自己打包的镜像都是使用的m1 mac docker，换了X86的电脑就正常了…
+不是说arm 版本的docker打包的镜像也可以运行在x86服务器上的吗？… 今天算是踩雷了
+
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/09/29</span>
+            </div>
+            <!-- tags  -->
+            
+        </div>
+    </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
+        <a class="abstract-title" href = "/2021/08/12/ARIMA%E6%A8%A1%E5%9E%8Bpython/" >
+            
+                <span>ARIMA模型python</span>
+        </a>
+        <div class="abstract-content">
+            ARIMA基础知识学习博客1
+视频1
+Github参考
+ARIMA实践问题关于get_prediction()与forecast()的区别
+知乎回答
+
+
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/08/12</span>
+            </div>
+            <!-- tags  -->
+            
+        </div>
+    </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
         <a class="abstract-title" href = "/2021/07/25/hexo%E5%8D%9A%E5%AE%A2%E8%BF%81%E7%A7%BB%E8%87%B3%E6%96%B0%E7%94%B5%E8%84%91/" >
             
                 <span>hexo博客迁移至新电脑</span>
@@ -366,9 +424,9 @@ theme/
 source/
 scaffold/
 package.json
-node_modulesPS：网上很多教程没提node_modules，但是自己在操作的时候，不复制该文件夹，会提示报错
+node_modules
 
-3.测试
+PS：网上很多教程没提node_modules，但是自己在操作的时候，不复制该文件夹，会提示报错3.测试
 123hexo ghexo shexo d
         </div>
         <div class="abstract-post-meta">
@@ -590,76 +648,6 @@ D...
             <div class= abstract-tags >
     
         <a class="post-tag" href="javascript:void(0);" data-tags = "Docker">Docker</a>
-    
-</div>
-            
-        </div>
-    </article>
-    
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2021/04/20/Docker%E7%AC%94%E8%AE%B0/" >
-            
-                <span>Docker Cli常用命令小结</span>
-        </a>
-        <div class="abstract-content">
-            启停容器如果本地没有 ubuntu 镜像，可以使用 docker pull 命令来载入 ubuntu 镜像。如果不加镜像后不加tag，默认latest
-1docker pull ubuntu:15.10
-
-通常启动一个容器命令如下
-1docker run -itd --name test ubuntu &#x2F;bin&#x2F;bash
-
--i: 交互式操作。
--t: 终端。
--d: 容器在后台运行。
-–name test：指定容器的name
-ubuntu: ubuntu 镜像。
-/bin/bash：放在镜像名后的是命令，这里我们希望有个交互式 Shell，因此用的是 /bin/ba...
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/04/20</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "Docker">Docker</a>
-    
-</div>
-            
-        </div>
-    </article>
-    
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2021/04/01/minikube-Error-setting-up-host-only-network-on-machine-start/" >
-            
-                <span>minikube--Error setting up host only network on machine start</span>
-        </a>
-        <div class="abstract-content">
-            Mac下的minikube无法启动前段时间折腾了一下系统，最终还是回到了原来的系统版本，用的time machine恢复的。今天使用minikube时发现无法启动了，报了如下的错。
-1Error:[VBOX_HOST_ADAPTER] create: creating: Error setting up host only network on machine start: The host-only adapter we just created is not visible. This is a well known VirtualBox bug. You might want to...
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/04/01</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "minikube">minikube</a>
     
 </div>
             
@@ -906,9 +894,48 @@ ubuntu: ubuntu 镜像。
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 13
+        Total : 16
         </div>
         <!-- search  -->
         
@@ -919,8 +946,32 @@ ubuntu: ubuntu 镜像。
     
     
     
+    <div class="archive-year"> 2022 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/04</span><a class="archive-post-title" href= "/2022/03/04/OpenStack%E9%83%A8%E7%BD%B2/" >OpenStack部署</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
     <div class="archive-year"> 2021 </div>
     <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/29</span><a class="archive-post-title" href= "/2021/09/29/Back-off-restarting-failed-container/" >Back-off restarting failed container</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/12</span><a class="archive-post-title" href= "/2021/08/12/ARIMA%E6%A8%A1%E5%9E%8Bpython/" >ARIMA模型python</a>
+        </li>
     
     
         <li class="archive-post-item">
@@ -1009,6 +1060,8 @@ ubuntu: ubuntu 镜像。
         <span class="sidebar-tag-name" data-tags="码农翻身"><span class="iconfont-archer">&#xe606;</span>码农翻身</span>
     
         <span class="sidebar-tag-name" data-tags="爬虫"><span class="iconfont-archer">&#xe606;</span>爬虫</span>
+    
+        <span class="sidebar-tag-name" data-tags="Openstack"><span class="iconfont-archer">&#xe606;</span>Openstack</span>
     
     </div>
     <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
