@@ -22,7 +22,7 @@
     <meta name="description" content="">
     <meta property="og:type" content="website">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/archives/2021/page/2/index.html">
+<meta property="og:url" content="http://example.com/archives/2023/11/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:locale" content="en_US">
 <meta property="article:author" content="John Doe">
@@ -354,36 +354,20 @@
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2021/04/20/Docker%E7%AC%94%E8%AE%B0/" >
+        <a class="abstract-title" href = "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator/" >
             
-                <span>Docker Cli常用命令小结</span>
+                <span>Python iterator iterable</span>
         </a>
         <div class="abstract-content">
-            启停容器如果本地没有 ubuntu 镜像，可以使用 docker pull 命令来载入 ubuntu 镜像。如果不加镜像后不加tag，默认latest
-1docker pull ubuntu:15.10
-
-通常启动一个容器命令如下
-1docker run -itd --name test ubuntu &#x2F;bin&#x2F;bash
-
--i: 交互式操作。
--t: 终端。
--d: 容器在后台运行。
-–name test：指定容器的name
-ubuntu: ubuntu 镜像。
-/bin/bash：放在镜像名后的是命令，这里我们希望有个交互式 Shell，因此用的是 /bin/ba...
+            Python iterator iterable深入学习直接上example代码
+123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657&quot;&quot;&quot;iterable: 可迭代对象(数据保存者) 名词!iterator: 迭代器(类似指针)说人话总结:我们对一个list or dict等可迭代对象进行 for loop时需要定义一个__iter__返回一个迭代器(类似指针), 这个迭代器(指针)需要实现__nex...
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
             <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/04/20</span>
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2023/11/19</span>
             </div>
             <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "Docker">Docker</a>
-    
-</div>
             
         </div>
     </article>
@@ -394,138 +378,25 @@ ubuntu: ubuntu 镜像。
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2021/04/01/minikube-Error-setting-up-host-only-network-on-machine-start/" >
+        <a class="abstract-title" href = "/2023/11/19/%E5%91%A8%E6%9B%B4flag/" >
             
-                <span>minikube--Error setting up host only network on machine start</span>
+                <span>周更flag 避免失业</span>
         </a>
         <div class="abstract-content">
-            Mac下的minikube无法启动前段时间折腾了一下系统，最终还是回到了原来的系统版本，用的time machine恢复的。今天使用minikube时发现无法启动了，报了如下的错。
-1Error:[VBOX_HOST_ADAPTER] create: creating: Error setting up host only network on machine start: The host-only adapter we just created is not visible. This is a well known VirtualBox bug. You might want to...
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/04/01</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "minikube">minikube</a>
-    
-</div>
-            
-        </div>
-    </article>
-    
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2021/03/26/%E3%80%8A%E7%A0%81%E5%86%9C%E7%BF%BB%E8%BA%AB%E3%80%8B-%E6%88%91%E6%98%AF%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B/" >
-            
-                <span>《码农翻身》——我是一个线程</span>
-        </a>
-        <div class="abstract-content">
-            今天只扎了一针，而且一点都不痛，给护士小姐姐点赞。输液的时候不小心点开了《码农翻身》，说实话第一章看了好几遍（就只看过第一章…）恰巧前段时间稍微复习了一下“计算机八股文”，现在看里面的故事，能get到更多的梗了。
-线程状态线程这一章的前半部分可以用下面这张图概述，就绪、等待、等待状态的切换
-
-“你是新来的吧，你不知道我在等数据库服务员给我数据啊！据说他们比我们慢好几十万倍，在这里好好歇着吧。”
-
-—— 此时由于I/O操作或者其他事件处于等待状态
-
-我转身就往 CPU 车间跑，却发现这里的门只出不进！后面传来阵阵哄笑声：“果然是新人，不知道还得去就绪车间等。”  
-
-—— 根据上面的这张图...
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/03/26</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "码农翻身">码农翻身</a>
-    
-</div>
-            
-        </div>
-    </article>
-    
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2021/03/25/shell%E6%9F%A5%E8%AF%A2%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81%E5%B9%B6%E9%87%8D%E5%90%AF%E5%AE%B9%E5%99%A8/" >
-            
-                <span>shell查询容器状态并重启容器</span>
-        </a>
-        <div class="abstract-content">
-            场景描述今年1月在做一个小项目的过程中，遇到一个头疼的问题，每一台虚拟机上需要部署多个zfb提供的容器，但是zfb那边说由于当初设计的时候就是单体式架构，一个容器包含了所有的功能，特别吃资源，每一个容器最好是独占一台虚拟机，这直接和项目的背景冲突了。
-问题描述起初强行一台虚拟机部署n个容器，发现还是能正常运行的，但是每隔一段时间就会随机exit一两个容器，导致调用服务的时候时不时报错。
-解决方案联系zfb让他们改代码显然是不现实的，于是只能自己想点骚操作了…启动容器的时间还是挺短的…于是就写了个shell脚本，传到所有的服务器上，定期地执行检查，去判断有没有exit的容器，有的话拉起该容...
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/03/25</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "shell">shell</a>
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "微服务组项目">微服务组项目</a>
-    
-</div>
-            
-        </div>
-    </article>
-    
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2021/03/24/%E7%BB%88%E7%AB%AF%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE/" >
-            
-                <span>终端代理配置</span>
-        </a>
-        <div class="abstract-content">
-            Mac下终端走代理Shadowsocks的代理走的是http，因此即使开了全局代理，终端仍然无法走代理。使用Git clone时经常是龟速，在终端中执行如下代码，可以临时让终端走代理（端口号取决于不同的代理软件，Mac下的Shadowsocks默认端口是1087）
-12export http_proxy=http://127.0.0.1:1087export https_proxy=http://127.0.0.1:1087
-
+            N+3其实也挺香喜欢电车，于是乎来到了新能源车企。拿到offer的时候公司还是如日中天，入职没多久，就遇到了史无前例的大裁员。虽然凭借着应届生的身份躲过了这一轮，但觉得很难躲过下一轮。想着还是得多复盘自己的工作，以便随时进入找工作的状态，争取每周写一到两篇技术blog吧，不限于工作上的内容。
 
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
             <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/03/24</span>
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2023/11/19</span>
             </div>
             <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "提升生产力的小技巧">提升生产力的小技巧</a>
-    
-</div>
             
         </div>
     </article>
     
     <!-- paginator  -->
-    
-    <nav class="page-nav">
-        <a class="extend prev" rel="prev" href="/archives/2021/">&lt; PREV</a><a class="page-number" href="/archives/2021/">1</a><span class="page-number current">2</span>
-    </nav>
     
 </main>
             <!-- profile -->
