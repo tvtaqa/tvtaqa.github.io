@@ -22,7 +22,7 @@
     <meta name="description" content="">
     <meta property="og:type" content="website">
 <meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/archives/2022/index.html">
+<meta property="og:url" content="http://example.com/archives/page/3/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:locale" content="en_US">
 <meta property="article:author" content="John Doe">
@@ -354,26 +354,26 @@
     
     
     <article class="index-post">
-        <a class="abstract-title" href = "/2022/03/04/OpenStack%E9%83%A8%E7%BD%B2/" >
+        <a class="abstract-title" href = "/2021/03/24/%E7%BB%88%E7%AB%AF%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE/" >
             
-                <span>OpenStack部署</span>
+                <span>终端代理配置</span>
         </a>
         <div class="abstract-content">
-            概述最近做的课题是VM级别的资源管理，因此需要一个平台集中管理和调度VM资源。之前的课题是容器级别的伸缩，实验使用的是Kubernetes平台，类似的，Openstack是管理VM的。初步的实验计划是在学校的服务器上，拿一台VM进行单节点的OpenStack部署。
-VM的配置8核 16G内存
-版本信息如下
-123456[root@localhost ~]# lsb_release -aLSB Version:	:core-4.1-amd64:core-4.1-noarch:cxx-4.1-amd64:cxx-4.1-noarch:desktop-4.1-amd64:desktop-4.1...
+            Mac下终端走代理Shadowsocks的代理走的是http，因此即使开了全局代理，终端仍然无法走代理。使用Git clone时经常是龟速，在终端中执行如下代码，可以临时让终端走代理（端口号取决于不同的代理软件，Mac下的Shadowsocks默认端口是1087）
+12export http_proxy=http://127.0.0.1:1087export https_proxy=http://127.0.0.1:1087
+
+
         </div>
         <div class="abstract-post-meta">
             <!-- date  -->
             <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2022/03/04</span>
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/03/24</span>
             </div>
             <!-- tags  -->
             
             <div class= abstract-tags >
     
-        <a class="post-tag" href="javascript:void(0);" data-tags = "Openstack">Openstack</a>
+        <a class="post-tag" href="javascript:void(0);" data-tags = "提升生产力的小技巧">提升生产力的小技巧</a>
     
 </div>
             
@@ -381,6 +381,10 @@ VM的配置8核 16G内存
     </article>
     
     <!-- paginator  -->
+    
+    <nav class="page-nav">
+        <a class="extend prev" rel="prev" href="/archives/page/2/">&lt; PREV</a><a class="page-number" href="/archives/">1</a><a class="page-number" href="/archives/page/2/">2</a><span class="page-number current">3</span>
+    </nav>
     
 </main>
             <!-- profile -->

@@ -354,6 +354,43 @@
     
     
     <article class="index-post">
+        <a class="abstract-title" href = "/2021/06/10/MPA%E4%B8%8ECOPA%E6%80%BB%E7%BB%93/" >
+            
+                <span>MPA与COPA总结</span>
+        </a>
+        <div class="abstract-content">
+            Kubernetes弹性伸缩Kubernetes的弹性伸缩可以分成两类：
+
+面向Pod的弹性伸缩
+面向Node的弹性伸缩
+
+组合式弹性伸缩工具COPA与MPA伸缩算法的核心部分是近似或者说相同的，但是实现的方式不同。
+COPACOPA是以Python的Kubernetes client-go库实现的。在定期的获取Pod的流量后，实时地推荐一套伸缩方案（Pod个数+每个Pod的资源量），并执行伸缩。执行伸缩的方式是修改该微服务的deployment的yaml文件，通过python的库实现。简而言之，定期地修改yaml文件中replicas以及rescource下的request、limit...
+        </div>
+        <div class="abstract-post-meta">
+            <!-- date  -->
+            <div class="abstract-date">
+                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/06/10</span>
+            </div>
+            <!-- tags  -->
+            
+            <div class= abstract-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Kubernetes">Kubernetes</a>
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "弹性伸缩">弹性伸缩</a>
+    
+</div>
+            
+        </div>
+    </article>
+    
+    
+    
+    
+    
+    
+    <article class="index-post">
         <a class="abstract-title" href = "/2021/06/04/Java%E2%80%94%E2%80%94socket%E4%B8%8E%E7%BA%BF%E7%A8%8B/" >
             
                 <span>Java——socket与线程</span>
@@ -641,42 +678,10 @@ ubuntu: ubuntu 镜像。
         </div>
     </article>
     
-    
-    
-    
-    
-    
-    <article class="index-post">
-        <a class="abstract-title" href = "/2021/03/24/%E7%BB%88%E7%AB%AF%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE/" >
-            
-                <span>终端代理配置</span>
-        </a>
-        <div class="abstract-content">
-            Mac下终端走代理Shadowsocks的代理走的是http，因此即使开了全局代理，终端仍然无法走代理。使用Git clone时经常是龟速，在终端中执行如下代码，可以临时让终端走代理（端口号取决于不同的代理软件，Mac下的Shadowsocks默认端口是1087）
-12export http_proxy=http://127.0.0.1:1087export https_proxy=http://127.0.0.1:1087
-
-
-        </div>
-        <div class="abstract-post-meta">
-            <!-- date  -->
-            <div class="abstract-date">
-                <span class="abstract-calander iconfont-archer">&#xe676;</span><span class="abstract-time">2021/03/24</span>
-            </div>
-            <!-- tags  -->
-            
-            <div class= abstract-tags >
-    
-        <a class="post-tag" href="javascript:void(0);" data-tags = "提升生产力的小技巧">提升生产力的小技巧</a>
-    
-</div>
-            
-        </div>
-    </article>
-    
     <!-- paginator  -->
     
     <nav class="page-nav">
-        <a class="extend prev" rel="prev" href="/archives/">&lt; PREV</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span>
+        <a class="extend prev" rel="prev" href="/archives/">&lt; PREV</a><a class="page-number" href="/archives/">1</a><span class="page-number current">2</span><a class="page-number" href="/archives/page/3/">3</a><a class="extend next" rel="next" href="/archives/page/3/">NEXT &gt;</a>
     </nav>
     
 </main>
@@ -1004,9 +1009,22 @@ ubuntu: ubuntu 镜像。
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <div class="total-and-search">
         <div class="total-archive">
-        Total : 20
+        Total : 21
         </div>
         <!-- search  -->
         
@@ -1019,6 +1037,11 @@ ubuntu: ubuntu 镜像。
     
     <div class="archive-year"> 2023 </div>
     <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator%20copy/" >代码的方式操控CANoe</a>
+        </li>
     
     
         <li class="archive-post-item">
@@ -1143,15 +1166,15 @@ ubuntu: ubuntu 镜像。
         <div class="sidebar-panel-tags">
     <div class="sidebar-tags-name">
     
-        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
-    
         <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
     
         <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
     
-        <span class="sidebar-tag-name" data-tags="Openstack"><span class="iconfont-archer">&#xe606;</span>Openstack</span>
-    
         <span class="sidebar-tag-name" data-tags="弹性伸缩"><span class="iconfont-archer">&#xe606;</span>弹性伸缩</span>
+    
+        <span class="sidebar-tag-name" data-tags="Openstack"><span class="iconfont-archer">&#xe606;</span>Openstack</span>
     
         <span class="sidebar-tag-name" data-tags="minikube"><span class="iconfont-archer">&#xe606;</span>minikube</span>
     
@@ -1161,9 +1184,9 @@ ubuntu: ubuntu 镜像。
     
         <span class="sidebar-tag-name" data-tags="码农翻身"><span class="iconfont-archer">&#xe606;</span>码农翻身</span>
     
-        <span class="sidebar-tag-name" data-tags="protobuf"><span class="iconfont-archer">&#xe606;</span>protobuf</span>
-    
         <span class="sidebar-tag-name" data-tags="提升生产力的小技巧"><span class="iconfont-archer">&#xe606;</span>提升生产力的小技巧</span>
+    
+        <span class="sidebar-tag-name" data-tags="protobuf"><span class="iconfont-archer">&#xe606;</span>protobuf</span>
     
         <span class="sidebar-tag-name" data-tags="爬虫"><span class="iconfont-archer">&#xe606;</span>爬虫</span>
     
