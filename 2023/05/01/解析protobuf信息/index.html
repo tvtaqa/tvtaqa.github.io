@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="John Doe">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="John Doe">
+    
+    <meta name="keywords" content="hexo,hexo-theme,hexo-blog">
+    
+    <meta name="description" content="">
+    <meta name="description" content="概述项目中需要将.proto文件的message service enum等信息全部提取出来。搜寻一番后，发现网上关于protobuf的教程大部分都是使用使用protobuf进行通信，比如使用protoc编译成_pb2.py后，直接在其基础上进行消息的赋值和消息的发送。而我需要的是提取message中变量的name、type以及label(是否是repeated)。在search文档的时候，发现G">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python Protobuf descriptor解析.proto文件">
+<meta property="og:url" content="http://example.com/2023/05/01/%E8%A7%A3%E6%9E%90protobuf%E4%BF%A1%E6%81%AF/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="概述项目中需要将.proto文件的message service enum等信息全部提取出来。搜寻一番后，发现网上关于protobuf的教程大部分都是使用使用protobuf进行通信，比如使用protoc编译成_pb2.py后，直接在其基础上进行消息的赋值和消息的发送。而我需要的是提取message中变量的name、type以及label(是否是repeated)。在search文档的时候，发现G">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-05-01T04:48:49.000Z">
+<meta property="article:modified_time" content="2023-08-20T14:55:38.770Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="protobuf">
+<meta name="twitter:card" content="summary">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    
+    <title>Python Protobuf descriptor解析.proto文件 · SpaceY&#39;s Qzone</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >SpaceY&#39;s Qzone.</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">Python Protobuf descriptor解析.proto文件</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>SpaceY's Qzone.</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:50vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            Python Protobuf descriptor解析.proto文件
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "protobuf">protobuf</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">1.3k</span>Reading time: <span class="post-count reading-time">6 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2023/05/01</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>项目中需要将.proto文件的message service enum等信息全部提取出来。搜寻一番后，发现网上关于protobuf的教程大部分都是使用使用protobuf进行通信，比如使用protoc编译成_pb2.py后，直接在其基础上进行消息的赋值和消息的发送。而我需要的是提取message中变量的name、type以及label(是否是repeated)。在search文档的时候，发现Google官方文档里提到了descriptor，能在_pb2.py的基础上提取到我所需要的结构信息。</p>
+<h2 id="官方文档链接"><a href="#官方文档链接" class="headerlink" title="官方文档链接"></a>官方文档链接</h2><p><a target="_blank" rel="noopener" href="https://protobuf.dev/getting-started/pythontutorial/">https://protobuf.dev/getting-started/pythontutorial/</a></p>
+<h2 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h2><ol>
+<li>首先使用protoc对.proto文件进行编译 生成_pb.py文件</li>
+<li>在代码中import该py文件，使用.DESCRIPTOR就能获取service message等信息</li>
+<li>提取到的信息塞到自定义的对象中</li>
+</ol>
+<h2 id="示例代码"><a href="#示例代码" class="headerlink" title="示例代码"></a>示例代码</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">List</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">##############################################################</span></span><br><span class="line"><span class="comment">######################## Common Functions ####################</span></span><br><span class="line"><span class="comment">##############################################################</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">process_options</span>(<span class="params">options: <span class="built_in">str</span></span>) -&gt; <span class="built_in">dict</span>:</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;处理options，将其转化为dict</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        options: options原始数据</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Returns:</span></span><br><span class="line"><span class="string">        以dict的形式存储options</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    res_options = &#123;&#125;</span><br><span class="line">    processed_options = options</span><br><span class="line">    processed_options = processed_options.split(<span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">    <span class="keyword">for</span> item <span class="keyword">in</span> processed_options:</span><br><span class="line">        <span class="keyword">if</span> item == <span class="string">&#x27;&#x27;</span>:</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        item_split = item.split(<span class="string">&#x27;:&#x27;</span>)</span><br><span class="line">        var = <span class="built_in">str</span>(item_split[<span class="number">0</span>])</span><br><span class="line">        var = re.findall(<span class="string">&#x27;\[(.*?)\]&#x27;</span>, var)[<span class="number">0</span>].split(<span class="string">&#x27;.&#x27;</span>)</span><br><span class="line">        var = var[<span class="built_in">len</span>(var) - <span class="number">1</span>]</span><br><span class="line">        val = <span class="built_in">str</span>(item_split[<span class="number">1</span>]).strip()</span><br><span class="line">        <span class="comment"># logger.debug(&#x27;\t var:&#123;&#125; val:&#123;&#125;&#x27;.format(var, val))</span></span><br><span class="line">        res_options[var] = val</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> res_options</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">##############################################################</span></span><br><span class="line"><span class="comment">######################## Class Definition ####################</span></span><br><span class="line"><span class="comment">##############################################################</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">EnumEntity</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, enum_name: <span class="built_in">str</span></span>):</span></span><br><span class="line">        self.enum_name = enum_name</span><br><span class="line">        self.description2val = &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">add_description2val</span>(<span class="params">self, description: <span class="built_in">str</span>, val: <span class="built_in">int</span></span>):</span></span><br><span class="line">        self.description2val[description] = val</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">VarInMessageEntity</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, var_name: <span class="built_in">str</span>, var_type_int: <span class="built_in">int</span>, label: <span class="built_in">int</span>, var_type_str=<span class="string">&quot;&quot;</span></span>):</span></span><br><span class="line">        <span class="comment"># 变量名</span></span><br><span class="line">        self.var_name = var_name</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 变量类型(int)</span></span><br><span class="line">        <span class="string">&#x27;&#x27;&#x27;protobuf数据类型 var_type: int </span></span><br><span class="line"><span class="string">        参考google/protobuf/descriptor.proto</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        double: 1</span></span><br><span class="line"><span class="string">        float: 2</span></span><br><span class="line"><span class="string">        int64: 3</span></span><br><span class="line"><span class="string">        uint64: 4</span></span><br><span class="line"><span class="string">        int32: 5</span></span><br><span class="line"><span class="string">        fixed64: 6</span></span><br><span class="line"><span class="string">        fixed32: 7</span></span><br><span class="line"><span class="string">        bool: 8</span></span><br><span class="line"><span class="string">        string: 9</span></span><br><span class="line"><span class="string">        bytes: 12</span></span><br><span class="line"><span class="string">        uint32: 13</span></span><br><span class="line"><span class="string">        enum: 14</span></span><br><span class="line"><span class="string">        message: 11</span></span><br><span class="line"><span class="string">        &#x27;&#x27;&#x27;</span></span><br><span class="line">        self.var_type_int = var_type_int</span><br><span class="line"></span><br><span class="line">        <span class="comment"># optional or repeated</span></span><br><span class="line">        self.label = label</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 变量类型(str)</span></span><br><span class="line">        self.var_type_str = var_type_str</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">revise_label</span>(<span class="params">self, field_options</span>):</span></span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        由于protobuf3语法不再支持required, 只有optional和repeated，默认缺省为optional</span></span><br><span class="line"><span class="string">        而NIO对于服务的定义仍需要使用required，默认缺省为require，需要特殊的处理</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Step 1:</span></span><br><span class="line"><span class="string">        工具在拿到原始protobuf后进行文本处理，对含有optional的字段加上[(required) = false]</span></span><br><span class="line"><span class="string">        optional int32 index = 1 [(required) = false];</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        同时在nrpc.option.proto文件中添加optional bool required = 1000;</span></span><br><span class="line"><span class="string">        extend google.protobuf.FieldOptions</span></span><br><span class="line"><span class="string">        &#123;</span></span><br><span class="line"><span class="string">            XXXXXX;</span></span><br><span class="line"><span class="string">            optional bool required = 1000;</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Step 2:</span></span><br><span class="line"><span class="string">        使用protoc+protobuf descriptor解析文件时，repeated的字段能常规识别</span></span><br><span class="line"><span class="string">        提取原始信息时，optional和required读到的都是var.label == 1(optional)，需要额外的修正</span></span><br><span class="line"><span class="string">        a. var.label == 1 &amp;&amp; 带有option[ (required) = false ] -&gt; optional</span></span><br><span class="line"><span class="string">        b. var.label == 1 &amp;&amp; 无option信息                     -&gt; required(var.label = 2)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            field_options: dict - &#123;&quot;required&quot;:&quot;false&quot;&#125; or &#123;&#125;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        options = process_options(field_options)</span><br><span class="line">        <span class="keyword">if</span> self.label == <span class="number">1</span> <span class="keyword">and</span> <span class="string">&quot;required&quot;</span> <span class="keyword">not</span> <span class="keyword">in</span> options.keys():</span><br><span class="line">            self.label = <span class="number">2</span></span><br><span class="line">        <span class="keyword">elif</span> self.label == <span class="number">1</span> <span class="keyword">and</span> <span class="string">&quot;required&quot;</span> <span class="keyword">in</span> options.keys():</span><br><span class="line">            self.label = <span class="number">1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MessageEntity</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, message_name: <span class="built_in">str</span></span>):</span></span><br><span class="line">        <span class="comment"># message的名字</span></span><br><span class="line">        self.message_name = message_name</span><br><span class="line"></span><br><span class="line">        <span class="comment"># message的下的所有var(VarInMessageEntity)</span></span><br><span class="line">        self.<span class="built_in">vars</span>: <span class="type">List</span>[VarInMessageEntity] = []</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MethodEntity</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, method_name: <span class="built_in">str</span>, in_param: <span class="built_in">str</span>, out_param: <span class="built_in">str</span>, options: <span class="built_in">str</span></span>):</span></span><br><span class="line">        <span class="comment"># method名字</span></span><br><span class="line">        self.method_name = method_name</span><br><span class="line"></span><br><span class="line">        <span class="comment"># method的in参数</span></span><br><span class="line">        self.in_param = in_param</span><br><span class="line"></span><br><span class="line">        <span class="comment"># method的out参数</span></span><br><span class="line">        self.out_param = out_param</span><br><span class="line"></span><br><span class="line">        <span class="comment"># method内部自定义消息 eg:</span></span><br><span class="line">        <span class="comment"># option(rpc_id) = 105;</span></span><br><span class="line">        <span class="comment"># option(method_type) = FIELD_WRITABLE;</span></span><br><span class="line">        <span class="comment"># option(update_policy) = ON_CHANGE;</span></span><br><span class="line">        <span class="comment"># ...</span></span><br><span class="line">        self.options = process_options(options)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ServiceEntity</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, service_name: <span class="built_in">str</span>, instance_name=<span class="string">&quot;&quot;</span></span>):</span></span><br><span class="line">        <span class="comment"># service名字</span></span><br><span class="line">        self.service_name = service_name</span><br><span class="line"></span><br><span class="line">        <span class="comment"># # 多实例name 若不存在多实例 则&quot;&quot;</span></span><br><span class="line">        <span class="comment"># self.instance_name = instance_name</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># service下的所有method(MethodEntity)</span></span><br><span class="line">        self.methods = &#123;&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProtoEntity</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, namespace: <span class="built_in">str</span></span>):</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># # EnumEntity对象构成的list</span></span><br><span class="line">        <span class="comment"># self.enums: List[EnumEntity] = []</span></span><br><span class="line">        <span class="comment">#</span></span><br><span class="line">        <span class="comment"># # enum的name 与 EnumEntity对象的mapping</span></span><br><span class="line">        <span class="comment"># self.enum_name2obj = &#123;&#125;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># protobuf的namespace</span></span><br><span class="line">        self.namespace = namespace</span><br><span class="line"></span><br><span class="line">        <span class="comment"># ServiceEntity对象构成的list 正常情况下里面只有一个service</span></span><br><span class="line">        self.services = []</span><br><span class="line"></span><br><span class="line">        <span class="comment"># MessageEntity对象构成的list</span></span><br><span class="line">        self.messages = &#123;&#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># # message的name 与 MessageEntity对象的mapping</span></span><br><span class="line">        <span class="comment"># self.message_name2obj = &#123;&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> entity</span><br><span class="line"><span class="keyword">from</span> tool_log <span class="keyword">import</span> logger</span><br><span class="line"><span class="keyword">from</span> constants <span class="keyword">import</span> *</span><br><span class="line"></span><br><span class="line">current_path = os.path.abspath(os.path.dirname(__file__))</span><br><span class="line">sys.path.append(os.path.join(current_path, <span class="string">&#x27;pb2&#x27;</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment">########################### 由工具根据proto文件自动生成 #####################################</span></span><br><span class="line"><span class="keyword">import</span> HelloWorld_pb2 <span class="keyword">as</span> helloworld_pb2_desc</span><br><span class="line">file_descriptors = [helloworld_pb2_desc.DESCRIPTOR,]</span><br><span class="line"><span class="comment">########################### 由工具根据proto文件自动生成 #####################################</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">protos = []</span><br><span class="line"></span><br><span class="line"><span class="comment">##############################################################</span></span><br><span class="line"><span class="comment">##################### Function Definition ####################</span></span><br><span class="line"><span class="comment">##############################################################</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">extra_message_info</span>(<span class="params">proto: entity.ProtoEntity, file_descriptor</span>) -&gt; entity.ProtoEntity:</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;提取Protobuf下 所有的message信息</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        proto: ProtoEntity对象</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Returns:</span></span><br><span class="line"><span class="string">        proto: 更新后的ProtoEntity对象</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">for</span> message_type <span class="keyword">in</span> file_descriptor.message_types_by_name:</span><br><span class="line">        <span class="comment"># logger.debug(&quot;message_name:&#123;&#125;&quot;.format(message_type))</span></span><br><span class="line">        message_entity = entity.MessageEntity(<span class="built_in">str</span>(message_type))</span><br><span class="line">        <span class="keyword">for</span> field <span class="keyword">in</span> file_descriptor.message_types_by_name[message_type].fields:</span><br><span class="line">            <span class="comment"># logger.debug(&quot;&#123;&#125; &#123;&#125; &#123;&#125;&quot;.format(field.name, field.number, field.type))</span></span><br><span class="line"></span><br><span class="line">            var_entity = entity.VarInMessageEntity(var_name=field.name,</span><br><span class="line">                                                   var_type_int=field.<span class="built_in">type</span>,</span><br><span class="line">                                                   label=field.label)</span><br><span class="line">            <span class="keyword">if</span> field.<span class="built_in">type</span> == <span class="number">11</span>:</span><br><span class="line">                origin = <span class="built_in">str</span>(field.message_type.full_name)</span><br><span class="line">                origin_list = origin.split(<span class="string">&#x27;.&#x27;</span>)</span><br><span class="line">                processed = origin_list[<span class="built_in">len</span>(origin_list) - <span class="number">1</span>]</span><br><span class="line">                var_entity.var_type_str = processed</span><br><span class="line">            <span class="keyword">elif</span> field.<span class="built_in">type</span> == <span class="number">14</span>:</span><br><span class="line">                origin = <span class="built_in">str</span>(field.enum_type.full_name)</span><br><span class="line">                origin_list = origin.split(<span class="string">&#x27;.&#x27;</span>)</span><br><span class="line">                processed = origin_list[<span class="built_in">len</span>(origin_list) - <span class="number">1</span>]</span><br><span class="line">                var_entity.var_type_str = processed</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                var_entity.var_type_str = INT2VAR_TYPE[field.<span class="built_in">type</span>]</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 根据options对label进行修正</span></span><br><span class="line">            field_options = field.GetOptions()</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">str</span>(field_options) != <span class="string">&#x27;&#x27;</span>:</span><br><span class="line">                logger.debug(<span class="string">&quot;var_name:&#123;&#125; options:&#123;&#125;&quot;</span>.<span class="built_in">format</span>(field.name, <span class="built_in">str</span>(field_options)))</span><br><span class="line"></span><br><span class="line">            var_entity.revise_label(<span class="built_in">str</span>(field_options))</span><br><span class="line"></span><br><span class="line">            message_entity.<span class="built_in">vars</span>.append(var_entity)</span><br><span class="line"></span><br><span class="line">        proto.messages[message_entity.message_name] = message_entity</span><br><span class="line">    <span class="keyword">return</span> proto</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">extra_service_info</span>(<span class="params">proto: entity.ProtoEntity, file_descriptor</span>) -&gt; entity.ProtoEntity:</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;提取Protobuf下 所有的service信息</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        proto: ProtoEntity对象</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Returns:</span></span><br><span class="line"><span class="string">        proto: 更新后的ProtoEntity对象</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="comment"># 获取所有服务的描述符</span></span><br><span class="line">    service_descriptors = file_descriptor.services_by_name</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> service_descriptor <span class="keyword">in</span> service_descriptors.values():</span><br><span class="line">        <span class="comment"># for method_descriptor in service_descriptor.methods:</span></span><br><span class="line">        service_options = service_descriptor.GetOptions()</span><br><span class="line">        <span class="comment"># logger.debug(&quot;service_options: &#123;&#125;&quot;.format(service_options))</span></span><br><span class="line">        service_entity = entity.ServiceEntity(service_name=<span class="built_in">str</span>(service_descriptor.name))</span><br><span class="line"></span><br><span class="line">        <span class="comment"># logger.debug(f&#x27;Service name: &#123;str(service_descriptor.name)&#125;&#x27;)</span></span><br><span class="line">        <span class="keyword">for</span> method <span class="keyword">in</span> service_descriptor.methods:</span><br><span class="line">            in_param = <span class="built_in">str</span>(method.input_type.name)</span><br><span class="line">            out_param = <span class="built_in">str</span>(method.output_type.name)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># logger.debug(&quot;method.GetOptions(): &#123;&#125;&quot;.format(method.GetOptions()))</span></span><br><span class="line">            method_entity = entity.MethodEntity(in_param=in_param,</span><br><span class="line">                                                out_param=out_param,</span><br><span class="line">                                                options=<span class="built_in">str</span>(method.GetOptions()),</span><br><span class="line">                                                method_name=<span class="built_in">str</span>(method.name))</span><br><span class="line"></span><br><span class="line">            service_entity.methods[<span class="built_in">str</span>(method.name)] = method_entity</span><br><span class="line"></span><br><span class="line">        <span class="keyword">pass</span></span><br><span class="line">        <span class="comment"># proto.services[service_entity.service_name] = service_entity</span></span><br><span class="line">        proto.services.append(service_entity)</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">    <span class="comment"># logger.debug(&#x27;extra done&#x27;)</span></span><br><span class="line">    <span class="keyword">return</span> proto</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">run</span>():</span></span><br><span class="line">    <span class="keyword">global</span> protos</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> file_descriptor <span class="keyword">in</span> file_descriptors:</span><br><span class="line">        namespace = <span class="built_in">str</span>(file_descriptor.package)</span><br><span class="line"></span><br><span class="line">        proto = entity.ProtoEntity(namespace)</span><br><span class="line"></span><br><span class="line">        extra_service_info(proto, file_descriptor)</span><br><span class="line">        extra_message_info(proto, file_descriptor)</span><br><span class="line"></span><br><span class="line">        protos.append(proto)</span><br><span class="line">        logger.info(<span class="string">&#x27;Parse &#123;&#125; done&#x27;</span>.<span class="built_in">format</span>(proto.services[<span class="number">0</span>].service_name))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    run()</span><br></pre></td></tr></table></figure>
+
+
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2023/06/01/C++%E5%AD%97%E8%8A%82%E5%AF%B9%E9%BD%90/" title= "C++字节对齐">
+                    <div class="nextTitle">C++字节对齐</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2022/03/04/OpenStack%E9%83%A8%E7%BD%B2/" title= "OpenStack部署">
+                    <div class="prevTitle">OpenStack部署</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC81MzA2NS8yOTU0MQ==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- gitalk评论 -->
+
+    <!-- utteranc评论 -->
+
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:hqc@tongji.edu.cn" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/tvtaqa" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="/assets/wechat_qr.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%98%E6%96%B9%E6%96%87%E6%A1%A3%E9%93%BE%E6%8E%A5"><span class="toc-number">2.</span> <span class="toc-text">官方文档链接</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%93%8D%E4%BD%9C%E6%AD%A5%E9%AA%A4"><span class="toc-number">3.</span> <span class="toc-text">操作步骤</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81"><span class="toc-number">4.</span> <span class="toc-text">示例代码</span></a></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 22
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2025 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2025/02/24/test/" >this is a test file</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2023 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator/" >Python iterator iterable</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator%20copy/" >代码的方式操控CANoe</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/%E5%91%A8%E6%9B%B4flag/" >周更flag 避免失业</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/01</span><a class="archive-post-title" href= "/2023/06/01/C++%E5%AD%97%E8%8A%82%E5%AF%B9%E9%BD%90/" >C++字节对齐</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/01</span><a class="archive-post-title" href= "/2023/05/01/%E8%A7%A3%E6%9E%90protobuf%E4%BF%A1%E6%81%AF/" >Python Protobuf descriptor解析.proto文件</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2022 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/04</span><a class="archive-post-title" href= "/2022/03/04/OpenStack%E9%83%A8%E7%BD%B2/" >OpenStack部署</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/29</span><a class="archive-post-title" href= "/2021/09/29/Back-off-restarting-failed-container/" >Back-off restarting failed container</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/12</span><a class="archive-post-title" href= "/2021/08/12/ARIMA%E6%A8%A1%E5%9E%8Bpython/" >ARIMA模型python</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/25</span><a class="archive-post-title" href= "/2021/07/25/hexo%E5%8D%9A%E5%AE%A2%E8%BF%81%E7%A7%BB%E8%87%B3%E6%96%B0%E7%94%B5%E8%84%91/" >hexo博客迁移至新电脑</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/26</span><a class="archive-post-title" href= "/2021/06/26/JDBC%E5%B0%8F%E7%BB%93/" >JDBC小结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/10</span><a class="archive-post-title" href= "/2021/06/10/MPA%E4%B8%8ECOPA%E6%80%BB%E7%BB%93/" >MPA与COPA总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/04</span><a class="archive-post-title" href= "/2021/06/04/Java%E2%80%94%E2%80%94socket%E4%B8%8E%E7%BA%BF%E7%A8%8B/" >Java——socket与线程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/27</span><a class="archive-post-title" href= "/2021/05/27/%E8%B1%86%E7%93%A3%E7%88%AC%E8%99%AB/" >豆瓣爬虫</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/K8s%E6%9D%83%E5%A8%81%E6%8C%87%E5%8D%97-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" >K8s权威指南-读书笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/03</span><a class="archive-post-title" href= "/2021/05/03/pod%E5%86%85%E4%B8%8Eapi-server%E4%BA%A4%E4%BA%92/" >pod内进程与api-server交互</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/26</span><a class="archive-post-title" href= "/2021/04/26/%E3%80%8ADocker%E6%8A%80%E6%9C%AF%E5%85%A5%E9%97%A8%E4%B8%8E%E5%AE%9E%E6%88%98%E3%80%8B%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" >《Docker技术入门与实战》读书笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/20</span><a class="archive-post-title" href= "/2021/04/20/Docker%E7%AC%94%E8%AE%B0/" >Docker Cli常用命令小结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/01</span><a class="archive-post-title" href= "/2021/04/01/minikube-Error-setting-up-host-only-network-on-machine-start/" >minikube--Error setting up host only network on machine start</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/26</span><a class="archive-post-title" href= "/2021/03/26/%E3%80%8A%E7%A0%81%E5%86%9C%E7%BF%BB%E8%BA%AB%E3%80%8B-%E6%88%91%E6%98%AF%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B/" >《码农翻身》——我是一个线程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/25</span><a class="archive-post-title" href= "/2021/03/25/shell%E6%9F%A5%E8%AF%A2%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81%E5%B9%B6%E9%87%8D%E5%90%AF%E5%AE%B9%E5%99%A8/" >shell查询容器状态并重启容器</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/24</span><a class="archive-post-title" href= "/2021/03/24/%E7%BB%88%E7%AB%AF%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE/" >终端代理配置</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="弹性伸缩"><span class="iconfont-archer">&#xe606;</span>弹性伸缩</span>
+    
+        <span class="sidebar-tag-name" data-tags="Openstack"><span class="iconfont-archer">&#xe606;</span>Openstack</span>
+    
+        <span class="sidebar-tag-name" data-tags="minikube"><span class="iconfont-archer">&#xe606;</span>minikube</span>
+    
+        <span class="sidebar-tag-name" data-tags="shell"><span class="iconfont-archer">&#xe606;</span>shell</span>
+    
+        <span class="sidebar-tag-name" data-tags="微服务组项目"><span class="iconfont-archer">&#xe606;</span>微服务组项目</span>
+    
+        <span class="sidebar-tag-name" data-tags="提升生产力的小技巧"><span class="iconfont-archer">&#xe606;</span>提升生产力的小技巧</span>
+    
+        <span class="sidebar-tag-name" data-tags="码农翻身"><span class="iconfont-archer">&#xe606;</span>码农翻身</span>
+    
+        <span class="sidebar-tag-name" data-tags="protobuf"><span class="iconfont-archer">&#xe606;</span>protobuf</span>
+    
+        <span class="sidebar-tag-name" data-tags="爬虫"><span class="iconfont-archer">&#xe606;</span>爬虫</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="技术笔记"><span class="iconfont-archer">&#xe60a;</span>技术笔记</span>
+    
+        <span class="sidebar-category-name" data-categories="读书笔记"><span class="iconfont-archer">&#xe60a;</span>读书笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "John Doe"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    </body>
+</html>
+
+

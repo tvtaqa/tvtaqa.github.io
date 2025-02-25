@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="John Doe">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="John Doe">
+    
+    <meta name="keywords" content="hexo,hexo-theme,hexo-blog">
+    
+    <meta name="description" content="">
+    <meta name="description" content="概述最近做的课题是VM级别的资源管理，因此需要一个平台集中管理和调度VM资源。之前的课题是容器级别的伸缩，实验使用的是Kubernetes平台，类似的，Openstack是管理VM的。初步的实验计划是在学校的服务器上，拿一台VM进行单节点的OpenStack部署。 VM的配置8核 16G内存 版本信息如下 123456[root@localhost ~]# lsb_release -aLSB Ve">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack部署">
+<meta property="og:url" content="http://example.com/2022/03/04/OpenStack%E9%83%A8%E7%BD%B2/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="概述最近做的课题是VM级别的资源管理，因此需要一个平台集中管理和调度VM资源。之前的课题是容器级别的伸缩，实验使用的是Kubernetes平台，类似的，Openstack是管理VM的。初步的实验计划是在学校的服务器上，拿一台VM进行单节点的OpenStack部署。 VM的配置8核 16G内存 版本信息如下 123456[root@localhost ~]# lsb_release -aLSB Ve">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-03-04T04:48:49.000Z">
+<meta property="article:modified_time" content="2022-03-06T08:26:16.870Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Openstack">
+<meta name="twitter:card" content="summary">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    
+    <title>OpenStack部署 · SpaceY&#39;s Qzone</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >SpaceY&#39;s Qzone.</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">OpenStack部署</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>SpaceY's Qzone.</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:50vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            OpenStack部署
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                    <div class= post-intro-tags >
+    
+        <a class="post-tag" href="javascript:void(0);" data-tags = "Openstack">Openstack</a>
+    
+</div>
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">2.1k</span>Reading time: <span class="post-count reading-time">11 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2022/03/04</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>最近做的课题是VM级别的资源管理，因此需要一个平台集中管理和调度VM资源。之前的课题是容器级别的伸缩，实验使用的是Kubernetes平台，类似的，Openstack是管理VM的。初步的实验计划是在学校的服务器上，拿一台VM进行单节点的OpenStack部署。</p>
+<h2 id="VM的配置"><a href="#VM的配置" class="headerlink" title="VM的配置"></a>VM的配置</h2><p>8核 16G内存</p>
+<p>版本信息如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]# lsb_release -a</span><br><span class="line">LSB Version:	:core-4.1-amd64:core-4.1-noarch:cxx-4.1-amd64:cxx-4.1-noarch:desktop-4.1-amd64:desktop-4.1-noarch:languages-4.1-amd64:languages-4.1-noarch:printing-4.1-amd64:printing-4.1-noarch</span><br><span class="line">Distributor ID:	CentOS</span><br><span class="line">Description:	CentOS Linux release 7.6.1810 (Core)</span><br><span class="line">Release:	7.6.1810</span><br><span class="line">Codename:	Core</span><br></pre></td></tr></table></figure>
+
+<h2 id="Openstack部署方式总结"><a href="#Openstack部署方式总结" class="headerlink" title="Openstack部署方式总结"></a>Openstack部署方式总结</h2><p><a target="_blank" rel="noopener" href="https://jckling.github.io/2021/01/20/OpenStack/OpenStack%20%E9%83%A8%E7%BD%B2%E6%96%B9%E5%BC%8F%E6%80%BB%E7%BB%93/">https://jckling.github.io/2021/01/20/OpenStack/OpenStack%20%E9%83%A8%E7%BD%B2%E6%96%B9%E5%BC%8F%E6%80%BB%E7%BB%93/</a></p>
+<h2 id="DevStack（失败，踩坑）"><a href="#DevStack（失败，踩坑）" class="headerlink" title="DevStack（失败，踩坑）"></a>DevStack（失败，踩坑）</h2><p>官方的文档</p>
+<p> <a target="_blank" rel="noopener" href="https://docs.openstack.org/devstack/latest/index.html">https://docs.openstack.org/devstack/latest/index.html</a></p>
+<p>跟着官方的文档进行了部署，但是抱各种错误，虽然找了博客试着改了一些权限，但是仍旧ERROR。参考博客如下，博客写的很细 但只解决了我的部分问题。</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/rhjeans/p/11328346.html">https://www.cnblogs.com/rhjeans/p/11328346.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1924768">https://cloud.tencent.com/developer/article/1924768</a></p>
+<h2 id="PackStack"><a href="#PackStack" class="headerlink" title="PackStack"></a>PackStack</h2><p>由于服务器的Linux版本是Centos7，看到有帖子说这个版本的系统部署devstack会存在各种问题，所以找了其他的部署方式。</p>
+<p>使用Packstack部署时，报了httpd相关的错，猜测是防火墙、NetworkManager都没关，所以选择clean一下环境后，再次进行部署。</p>
+<h3 id="PackStack卸载"><a href="#PackStack卸载" class="headerlink" title="PackStack卸载"></a>PackStack卸载</h3><p>参考博客</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/jintianzheng/article/details/113867024">https://blog.csdn.net/jintianzheng/article/details/113867024</a></p>
+<p><strong>下面的脚本可以完全卸载RDO，包括所有的程序数据，组件包等。</strong><br>注意：这里假设你在这台机器上面只跑了OpenStack！如果这台机器还有其他用途，那么请使用Slightly smaller hammer method这个方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"># Warning! Dangerous step! Destroys VMs</span><br><span class="line">for x in $(virsh list --all | grep instance- | awk &#39;&#123;print $2&#125;&#39;) ; do</span><br><span class="line">virsh destroy $x ;</span><br><span class="line">virsh undefine $x ;</span><br><span class="line">done ;</span><br><span class="line"># Warning! Dangerous step! Removes lots of packages, including many</span><br><span class="line"># which may be unrelated to RDO.</span><br><span class="line">yum remove -y nrpe &quot;*nagios*&quot; puppet ntp ntp-perl ntpdate &quot;*openstack*&quot; \</span><br><span class="line">&quot;*nova*&quot; &quot;*keystone*&quot; &quot;*glance*&quot; &quot;*cinder*&quot; &quot;*swift*&quot; \</span><br><span class="line">mysql mysql-server httpd &quot;*memcache*&quot; scsi-target-utils \</span><br><span class="line">iscsi-initiator-utils perl-DBI perl-DBD-MySQL ;</span><br><span class="line"></span><br><span class="line">ps -ef | grep -i repli | grep swift | awk &#39;&#123;print $2&#125;&#39; | xargs kill ;</span><br><span class="line"></span><br><span class="line"># Warning! Dangerous step! Deletes local application data</span><br><span class="line">rm -rf &#x2F;etc&#x2F;nagios &#x2F;etc&#x2F;yum.repos.d&#x2F;packstack_* &#x2F;root&#x2F;.my.cnf \</span><br><span class="line">&#x2F;var&#x2F;lib&#x2F;mysql&#x2F; &#x2F;var&#x2F;lib&#x2F;glance &#x2F;var&#x2F;lib&#x2F;nova &#x2F;etc&#x2F;nova &#x2F;etc&#x2F;swift \</span><br><span class="line">&#x2F;srv&#x2F;node&#x2F;device*&#x2F;* &#x2F;var&#x2F;lib&#x2F;cinder&#x2F; &#x2F;etc&#x2F;rsync.d&#x2F;frag* \</span><br><span class="line">&#x2F;var&#x2F;cache&#x2F;swift &#x2F;var&#x2F;log&#x2F;keystone ;</span><br><span class="line"></span><br><span class="line">umount &#x2F;srv&#x2F;node&#x2F;device* ;</span><br><span class="line">killall -9 dnsmasq tgtd httpd ;</span><br><span class="line">setenforce 0 ;</span><br><span class="line">vgremove -f cinder-volumes ;</span><br><span class="line">losetup -a | sed -e &#39;s&#x2F;:.*&#x2F;&#x2F;g&#39; | xargs losetup -d ;</span><br><span class="line">find &#x2F;etc&#x2F;pki&#x2F;tls -name &quot;ssl_ps*&quot; | xargs rm -rf ;</span><br><span class="line">for x in $(df | grep &quot;&#x2F;lib&#x2F;&quot; | sed -e &#39;s&#x2F;.* &#x2F;&#x2F;g&#39;) ; do</span><br><span class="line">umount $x ;</span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+
+<p>Slightly smaller hammer method ,下面的脚本只删除特定的程序数据和组件包，会留下一些Openstack相关的数据。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">for x in $(virsh list --all | grep instance- | awk &#39;&#123;print $2&#125;&#39;) ; do</span><br><span class="line">virsh destroy $x ;</span><br><span class="line">virsh undefine $x ;</span><br><span class="line">done ;</span><br><span class="line">yum remove -y &quot;*openstack*&quot; &quot;*nova*&quot; &quot;*keystone*&quot; &quot;*glance*&quot; &quot;*cinder*&quot; &quot;*swift*&quot; &quot;*rdo-release*&quot;;</span><br><span class="line"></span><br><span class="line"># Optional - makes database cleanup cleaner.</span><br><span class="line"># If you do this bit, the database cleanup stuff below is superfluous.</span><br><span class="line"># yum remove -y &quot;*mysql*&quot;</span><br><span class="line"></span><br><span class="line">ps -ef | grep -i repli | grep swift | awk &#39;&#123;print $2&#125;&#39; | xargs kill ;</span><br><span class="line"></span><br><span class="line">rm -rf &#x2F;etc&#x2F;yum.repos.d&#x2F;packstack_* &#x2F;var&#x2F;lib&#x2F;glance &#x2F;var&#x2F;lib&#x2F;nova &#x2F;etc&#x2F;nova &#x2F;etc&#x2F;swift \</span><br><span class="line">&#x2F;srv&#x2F;node&#x2F;device*&#x2F;* &#x2F;var&#x2F;lib&#x2F;cinder&#x2F; &#x2F;etc&#x2F;rsync.d&#x2F;frag* \</span><br><span class="line">&#x2F;var&#x2F;cache&#x2F;swift &#x2F;var&#x2F;log&#x2F;keystone &#x2F;tmp&#x2F;keystone-signing-nova ;</span><br><span class="line"></span><br><span class="line"># Ensure there is a root user and that we know the password</span><br><span class="line">service mysql stop</span><br><span class="line">cat &gt; &#x2F;tmp&#x2F;set_mysql_root_pwd &lt;&lt; EOF</span><br><span class="line">UPDATE mysql.user SET Password&#x3D;PASSWORD(&#39;MyNewPass&#39;) WHERE User&#x3D;&#39;root&#39;;</span><br><span class="line">FLUSH PRIVILEGES;</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># mysql cleanup</span><br><span class="line">&#x2F;usr&#x2F;bin&#x2F;mysqld_safe --init-file&#x3D;&#x2F;tmp&#x2F;set_mysql_root_pwd &amp;</span><br><span class="line">rm &#x2F;tmp&#x2F;set_mysql_root_pwd</span><br><span class="line">mysql -uroot -pMyNewPass -e &quot;drop database nova; drop database cinder; drop database keystone; drop database glance;&quot;</span><br><span class="line"></span><br><span class="line">umount &#x2F;srv&#x2F;node&#x2F;device* ;</span><br><span class="line">vgremove -f cinder-volumes ;</span><br><span class="line">losetup -a | sed -e &#39;s&#x2F;:.*&#x2F;&#x2F;g&#39; | xargs losetup -d ;</span><br><span class="line">find &#x2F;etc&#x2F;pki&#x2F;tls -name &quot;ssl_ps*&quot; | xargs rm -rf ;</span><br><span class="line">for x in $(df | grep &quot;&#x2F;lib&#x2F;&quot; | sed -e &#39;s&#x2F;.* &#x2F;&#x2F;g&#39;) ; do</span><br><span class="line">umount $x ;</span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="PackStack安装"><a href="#PackStack安装" class="headerlink" title="PackStack安装"></a>PackStack安装</h3><p>参考博客</p>
+<p><a target="_blank" rel="noopener" href="https://blog.51cto.com/u_9099998/2133088">https://blog.51cto.com/u_9099998/2133088</a></p>
+<p>1.关闭和禁用防火墙</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">systemctl stop firewalld</span><br><span class="line">systemctl disable firewalld</span><br><span class="line">systemctl stop NetworkManager</span><br><span class="line">systemctl disable NetworkManager</span><br></pre></td></tr></table></figure>
+
+<p>2.关闭selinux</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenforce 0</span><br></pre></td></tr></table></figure>
+
+<p>3.编辑/etc/selinux/config文件内容，将SELINUX值enforcing改为disabled：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">vim &#x2F;etc&#x2F;selinux&#x2F;config</span><br><span class="line"># 将SELINUX值enforcing改为disabled：</span><br></pre></td></tr></table></figure>
+
+<p>4.配置yum源</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y http:&#x2F;&#x2F;rdo.fedorapeople.org&#x2F;rdo-release.rpm</span><br></pre></td></tr></table></figure>
+
+<p>5.安装packstack工具</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install -y openstack-packstack</span><br></pre></td></tr></table></figure>
+
+<p>6.一键部署</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">packstack --allinone</span><br></pre></td></tr></table></figure>
+
+<h3 id="部署报错信息"><a href="#部署报错信息" class="headerlink" title="部署报错信息"></a>部署报错信息</h3><p>部署后仍然报了两个error。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">192.168.26.128_controller.pp:                     [ ERROR ]             </span><br><span class="line">Applying Puppet manifests                         [ ERROR ]</span><br></pre></td></tr></table></figure>
+
+<p>参考博客如下，博客中提到是数据库密码不匹配的原因，但是自己对比了一下，密码是一致的，因此拿着packstack-answers-xxxx.txt再次部署。</p>
+<p><a target="_blank" rel="noopener" href="https://xiaomu-li.cn/2021/07/15/OpenStack-RDO/">https://xiaomu-li.cn/2021/07/15/OpenStack-RDO/</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">packstack --answer-file&#x3D;&#x2F;root&#x2F;packstack-answers-xxxx.txt</span><br></pre></td></tr></table></figure>
+
+<h3 id="部署成功日志"><a href="#部署成功日志" class="headerlink" title="部署成功日志"></a>部署成功日志</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line">The installation log file is available at: &#x2F;var&#x2F;tmp&#x2F;packstack&#x2F;20220305-110755-B0JGEI&#x2F;openstack-setup.log</span><br><span class="line"></span><br><span class="line">Installing:</span><br><span class="line">Clean Up                                             [ DONE ]</span><br><span class="line">Discovering ip protocol version                      [ DONE ]</span><br><span class="line">Setting up ssh keys                                  [ DONE ]</span><br><span class="line">Preparing servers                                    [ DONE ]</span><br><span class="line">Pre installing Puppet and discovering hosts&#39; details [ DONE ]</span><br><span class="line">Preparing pre-install entries                        [ DONE ]</span><br><span class="line">Setting up CACERT                                    [ DONE ]</span><br><span class="line">Preparing AMQP entries                               [ DONE ]</span><br><span class="line">Preparing MariaDB entries                            [ DONE ]</span><br><span class="line">Fixing Keystone LDAP config parameters to be undef if empty[ DONE ]</span><br><span class="line">Preparing Keystone entries                           [ DONE ]</span><br><span class="line">Preparing Glance entries                             [ DONE ]</span><br><span class="line">Checking if the Cinder server has a cinder-volumes vg[ DONE ]</span><br><span class="line">Preparing Cinder entries                             [ DONE ]</span><br><span class="line">Preparing Nova API entries                           [ DONE ]</span><br><span class="line">Creating ssh keys for Nova migration                 [ DONE ]</span><br><span class="line">Gathering ssh host keys for Nova migration           [ DONE ]</span><br><span class="line">Preparing Nova Compute entries                       [ DONE ]</span><br><span class="line">Preparing Nova Scheduler entries                     [ DONE ]</span><br><span class="line">Preparing Nova VNC Proxy entries                     [ DONE ]</span><br><span class="line">Preparing OpenStack Network-related Nova entries     [ DONE ]</span><br><span class="line">Preparing Nova Common entries                        [ DONE ]</span><br><span class="line">Preparing Neutron API entries                        [ DONE ]</span><br><span class="line">Preparing Neutron L3 entries                         [ DONE ]</span><br><span class="line">Preparing Neutron L2 Agent entries                   [ DONE ]</span><br><span class="line">Preparing Neutron DHCP Agent entries                 [ DONE ]</span><br><span class="line">Preparing Neutron Metering Agent entries             [ DONE ]</span><br><span class="line">Checking if NetworkManager is enabled and running    [ DONE ]</span><br><span class="line">Preparing OpenStack Client entries                   [ DONE ]</span><br><span class="line">Preparing Horizon entries                            [ DONE ]</span><br><span class="line">Preparing Swift builder entries                      [ DONE ]</span><br><span class="line">Preparing Swift proxy entries                        [ DONE ]</span><br><span class="line">Preparing Swift storage entries                      [ DONE ]</span><br><span class="line">Preparing Gnocchi entries                            [ DONE ]</span><br><span class="line">Preparing Redis entries                              [ DONE ]</span><br><span class="line">Preparing Ceilometer entries                         [ DONE ]</span><br><span class="line">Preparing Aodh entries                               [ DONE ]</span><br><span class="line">Preparing Puppet manifests                           [ DONE ]</span><br><span class="line">Copying Puppet modules and manifests                 [ DONE ]</span><br><span class="line">Applying 192.168.8.80_controller.pp</span><br><span class="line">192.168.8.80_controller.pp:                          [ DONE ]</span><br><span class="line">Applying 192.168.8.80_network.pp</span><br><span class="line">192.168.8.80_network.pp:                             [ DONE ]</span><br><span class="line">Applying 192.168.8.80_compute.pp</span><br><span class="line">192.168.8.80_compute.pp:                             [ DONE ]</span><br><span class="line">Applying Puppet manifests                            [ DONE ]</span><br><span class="line">Finalizing                                           [ DONE ]</span><br><span class="line"></span><br><span class="line"> **** Installation completed successfully ******</span><br><span class="line"></span><br><span class="line">Additional information:</span><br><span class="line"> * Parameter CONFIG_NEUTRON_L2_AGENT: You have chosen OVN Neutron backend. Note that this backend does not support the VPNaaS or FWaaS services. Geneve will be used as the encapsulation method for tenant networks</span><br><span class="line"> * Time synchronization installation was skipped. Please note that unsynchronized time on server instances might be problem for some OpenStack components.</span><br><span class="line"> * File &#x2F;root&#x2F;keystonerc_admin has been created on OpenStack client host 192.168.8.80. To use the command line tools you need to source the file.</span><br><span class="line"> * To access the OpenStack Dashboard browse to http:&#x2F;&#x2F;192.168.8.80&#x2F;dashboard .</span><br><span class="line">Please, find your login credentials stored in the keystonerc_admin in your home directory.</span><br><span class="line"> * Because of the kernel update the host 192.168.8.80 requires reboot.</span><br><span class="line"> * The installation log file is available at: &#x2F;var&#x2F;tmp&#x2F;packstack&#x2F;20220305-110755-B0JGEI&#x2F;openstack-setup.log</span><br><span class="line"> * The generated manifests are available at: &#x2F;var&#x2F;tmp&#x2F;packstack&#x2F;20220305-110755-B0JGEI&#x2F;manifests</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="遇到的其他问题"><a href="#遇到的其他问题" class="headerlink" title="遇到的其他问题"></a>遇到的其他问题</h3><p>openstack部署在服务器虚拟化出来的VM上，因此想进行外网访问需要做端口映射。但是做完端口映射发现无法访问，报404.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">curl -lv http:&#x2F;&#x2F;10.60.150.36:3280&#x2F;dashboard</span><br><span class="line">*   Trying 10.60.150.36...</span><br><span class="line">* TCP_NODELAY set</span><br><span class="line">* Connected to 10.60.150.36 (10.60.150.36) port 3280 (#0)</span><br><span class="line">&gt; GET &#x2F;dashboard HTTP&#x2F;1.1</span><br><span class="line">&gt; Host: 10.60.150.36:3280</span><br><span class="line">&gt; User-Agent: curl&#x2F;7.64.1</span><br><span class="line">&gt; Accept: *&#x2F;*</span><br><span class="line">&gt;</span><br><span class="line">&lt; HTTP&#x2F;1.1 404 Not Found</span><br><span class="line">&lt; Date: Sun, 06 Mar 2022 07:36:18 GMT</span><br><span class="line">&lt; Server: Apache</span><br><span class="line">&lt; Content-Length: 207</span><br><span class="line">&lt; Content-Type: text&#x2F;html; charset&#x3D;iso-8859-1</span><br><span class="line">&lt;</span><br><span class="line">&lt;!DOCTYPE HTML PUBLIC &quot;-&#x2F;&#x2F;IETF&#x2F;&#x2F;DTD HTML 2.0&#x2F;&#x2F;EN&quot;&gt;</span><br><span class="line">&lt;html&gt;&lt;head&gt;</span><br><span class="line">&lt;title&gt;404 Not Found&lt;&#x2F;title&gt;</span><br><span class="line">&lt;&#x2F;head&gt;&lt;body&gt;</span><br><span class="line">&lt;h1&gt;Not Found&lt;&#x2F;h1&gt;</span><br><span class="line">&lt;p&gt;The requested URL &#x2F;dashboard was not found on this server.&lt;&#x2F;p&gt;</span><br><span class="line">&lt;&#x2F;body&gt;&lt;&#x2F;html&gt;</span><br><span class="line">* Connection #0 to host 10.60.150.36 left intact</span><br><span class="line">* Closing connection 0</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在内网访问时，是正常的，302重定向到<a target="_blank" rel="noopener" href="http://localhost/dashboard/auth/login/?next=/dashboard/%E3%80%82">http://localhost/dashboard/auth/login/?next=/dashboard/。</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost ~]# curl -lv localhost&#x2F;dashboard</span><br><span class="line">* About to connect() to localhost port 80 (#0)</span><br><span class="line">*   Trying ::1...</span><br><span class="line">* Connected to localhost (::1) port 80 (#0)</span><br><span class="line">&gt; GET &#x2F;dashboard HTTP&#x2F;1.1</span><br><span class="line">&gt; User-Agent: curl&#x2F;7.29.0</span><br><span class="line">&gt; Host: localhost</span><br><span class="line">&gt; Accept: *&#x2F;*</span><br><span class="line">&gt;</span><br><span class="line">&lt; HTTP&#x2F;1.1 302 Found</span><br><span class="line">&lt; Date: Sun, 06 Mar 2022 07:36:27 GMT</span><br><span class="line">&lt; Server: Apache</span><br><span class="line">&lt; Content-Language: en</span><br><span class="line">&lt; Vary: Accept-Language,Cookie</span><br><span class="line">&lt; X-Frame-Options: SAMEORIGIN</span><br><span class="line">&lt; Content-Length: 0</span><br><span class="line">&lt; Location: http:&#x2F;&#x2F;localhost&#x2F;dashboard&#x2F;auth&#x2F;login&#x2F;?next&#x3D;&#x2F;dashboard&#x2F;</span><br><span class="line">&lt; Content-Type: text&#x2F;html; charset&#x3D;utf-8</span><br></pre></td></tr></table></figure>
+
+
+
+<p>解决方案参考如下</p>
+<p><a target="_blank" rel="noopener" href="https://wanghaiqing.com/mobile/article/f231c007-a69e-4abf-8353-b2754d1332d9/">https://wanghaiqing.com/mobile/article/f231c007-a69e-4abf-8353-b2754d1332d9/</a></p>
+<h2 id="OpenStack使用"><a href="#OpenStack使用" class="headerlink" title="OpenStack使用"></a>OpenStack使用</h2><p><a target="_blank" rel="noopener" href="https://docs.openstack.org/zh_CN/user-guide/cli-cheat-sheet.html">https://docs.openstack.org/zh_CN/user-guide/cli-cheat-sheet.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://docs.openstack.org/zh_CN/user-guide/cli-launch-instances.html#gather-parameters-to-launch-an-instance">https://docs.openstack.org/zh_CN/user-guide/cli-launch-instances.html#gather-parameters-to-launch-an-instance</a></p>
+
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2023/05/01/%E8%A7%A3%E6%9E%90protobuf%E4%BF%A1%E6%81%AF/" title= "Python Protobuf descriptor解析.proto文件">
+                    <div class="nextTitle">Python Protobuf descriptor解析.proto文件</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2021/09/29/Back-off-restarting-failed-container/" title= "Back-off restarting failed container">
+                    <div class="prevTitle">Back-off restarting failed container</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC81MzA2NS8yOTU0MQ==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- gitalk评论 -->
+
+    <!-- utteranc评论 -->
+
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:hqc@tongji.edu.cn" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/tvtaqa" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="/assets/wechat_qr.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A6%82%E8%BF%B0"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#VM%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="toc-number">2.</span> <span class="toc-text">VM的配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Openstack%E9%83%A8%E7%BD%B2%E6%96%B9%E5%BC%8F%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">Openstack部署方式总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DevStack%EF%BC%88%E5%A4%B1%E8%B4%A5%EF%BC%8C%E8%B8%A9%E5%9D%91%EF%BC%89"><span class="toc-number">4.</span> <span class="toc-text">DevStack（失败，踩坑）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#PackStack"><span class="toc-number">5.</span> <span class="toc-text">PackStack</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#PackStack%E5%8D%B8%E8%BD%BD"><span class="toc-number">5.1.</span> <span class="toc-text">PackStack卸载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PackStack%E5%AE%89%E8%A3%85"><span class="toc-number">5.2.</span> <span class="toc-text">PackStack安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E6%8A%A5%E9%94%99%E4%BF%A1%E6%81%AF"><span class="toc-number">5.3.</span> <span class="toc-text">部署报错信息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E6%88%90%E5%8A%9F%E6%97%A5%E5%BF%97"><span class="toc-number">5.4.</span> <span class="toc-text">部署成功日志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%81%87%E5%88%B0%E7%9A%84%E5%85%B6%E4%BB%96%E9%97%AE%E9%A2%98"><span class="toc-number">5.5.</span> <span class="toc-text">遇到的其他问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenStack%E4%BD%BF%E7%94%A8"><span class="toc-number">6.</span> <span class="toc-text">OpenStack使用</span></a></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 22
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2025 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2025/02/24/test/" >this is a test file</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2023 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator/" >Python iterator iterable</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator%20copy/" >代码的方式操控CANoe</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/%E5%91%A8%E6%9B%B4flag/" >周更flag 避免失业</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/01</span><a class="archive-post-title" href= "/2023/06/01/C++%E5%AD%97%E8%8A%82%E5%AF%B9%E9%BD%90/" >C++字节对齐</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/01</span><a class="archive-post-title" href= "/2023/05/01/%E8%A7%A3%E6%9E%90protobuf%E4%BF%A1%E6%81%AF/" >Python Protobuf descriptor解析.proto文件</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2022 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/04</span><a class="archive-post-title" href= "/2022/03/04/OpenStack%E9%83%A8%E7%BD%B2/" >OpenStack部署</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/29</span><a class="archive-post-title" href= "/2021/09/29/Back-off-restarting-failed-container/" >Back-off restarting failed container</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/12</span><a class="archive-post-title" href= "/2021/08/12/ARIMA%E6%A8%A1%E5%9E%8Bpython/" >ARIMA模型python</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/25</span><a class="archive-post-title" href= "/2021/07/25/hexo%E5%8D%9A%E5%AE%A2%E8%BF%81%E7%A7%BB%E8%87%B3%E6%96%B0%E7%94%B5%E8%84%91/" >hexo博客迁移至新电脑</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/26</span><a class="archive-post-title" href= "/2021/06/26/JDBC%E5%B0%8F%E7%BB%93/" >JDBC小结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/10</span><a class="archive-post-title" href= "/2021/06/10/MPA%E4%B8%8ECOPA%E6%80%BB%E7%BB%93/" >MPA与COPA总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/04</span><a class="archive-post-title" href= "/2021/06/04/Java%E2%80%94%E2%80%94socket%E4%B8%8E%E7%BA%BF%E7%A8%8B/" >Java——socket与线程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/27</span><a class="archive-post-title" href= "/2021/05/27/%E8%B1%86%E7%93%A3%E7%88%AC%E8%99%AB/" >豆瓣爬虫</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/K8s%E6%9D%83%E5%A8%81%E6%8C%87%E5%8D%97-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" >K8s权威指南-读书笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/03</span><a class="archive-post-title" href= "/2021/05/03/pod%E5%86%85%E4%B8%8Eapi-server%E4%BA%A4%E4%BA%92/" >pod内进程与api-server交互</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/26</span><a class="archive-post-title" href= "/2021/04/26/%E3%80%8ADocker%E6%8A%80%E6%9C%AF%E5%85%A5%E9%97%A8%E4%B8%8E%E5%AE%9E%E6%88%98%E3%80%8B%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" >《Docker技术入门与实战》读书笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/20</span><a class="archive-post-title" href= "/2021/04/20/Docker%E7%AC%94%E8%AE%B0/" >Docker Cli常用命令小结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/01</span><a class="archive-post-title" href= "/2021/04/01/minikube-Error-setting-up-host-only-network-on-machine-start/" >minikube--Error setting up host only network on machine start</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/26</span><a class="archive-post-title" href= "/2021/03/26/%E3%80%8A%E7%A0%81%E5%86%9C%E7%BF%BB%E8%BA%AB%E3%80%8B-%E6%88%91%E6%98%AF%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B/" >《码农翻身》——我是一个线程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/25</span><a class="archive-post-title" href= "/2021/03/25/shell%E6%9F%A5%E8%AF%A2%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81%E5%B9%B6%E9%87%8D%E5%90%AF%E5%AE%B9%E5%99%A8/" >shell查询容器状态并重启容器</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/24</span><a class="archive-post-title" href= "/2021/03/24/%E7%BB%88%E7%AB%AF%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE/" >终端代理配置</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="弹性伸缩"><span class="iconfont-archer">&#xe606;</span>弹性伸缩</span>
+    
+        <span class="sidebar-tag-name" data-tags="Openstack"><span class="iconfont-archer">&#xe606;</span>Openstack</span>
+    
+        <span class="sidebar-tag-name" data-tags="minikube"><span class="iconfont-archer">&#xe606;</span>minikube</span>
+    
+        <span class="sidebar-tag-name" data-tags="shell"><span class="iconfont-archer">&#xe606;</span>shell</span>
+    
+        <span class="sidebar-tag-name" data-tags="微服务组项目"><span class="iconfont-archer">&#xe606;</span>微服务组项目</span>
+    
+        <span class="sidebar-tag-name" data-tags="提升生产力的小技巧"><span class="iconfont-archer">&#xe606;</span>提升生产力的小技巧</span>
+    
+        <span class="sidebar-tag-name" data-tags="码农翻身"><span class="iconfont-archer">&#xe606;</span>码农翻身</span>
+    
+        <span class="sidebar-tag-name" data-tags="protobuf"><span class="iconfont-archer">&#xe606;</span>protobuf</span>
+    
+        <span class="sidebar-tag-name" data-tags="爬虫"><span class="iconfont-archer">&#xe606;</span>爬虫</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="技术笔记"><span class="iconfont-archer">&#xe60a;</span>技术笔记</span>
+    
+        <span class="sidebar-category-name" data-categories="读书笔记"><span class="iconfont-archer">&#xe60a;</span>读书笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "John Doe"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    </body>
+</html>
+
+

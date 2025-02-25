@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- title -->
+
+
+
+
+<!-- keywords -->
+
+
+
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" >
+    <meta name="author" content="John Doe">
+    <meta name="renderer" content="webkit">
+    <meta name="copyright" content="John Doe">
+    
+    <meta name="keywords" content="hexo,hexo-theme,hexo-blog">
+    
+    <meta name="description" content="">
+    <meta name="description" content="代码的方式操控CANoe一、背景与需求项目中希望在Linux上读写CANoe中的CAN&#x2F;LIN以及系统变量的值。CANoe只能运行在windows上，那么就需要两步走：  在Windows上通过python or 其他编程语言的方式读写CANoe中的CAN&#x2F;LIN以及系统变量的值  在此基础上封装一层RPC接口即可。   对于步骤1，调用com口肯定是能够做到的。秉持着不重复造轮子的心态，sear">
+<meta property="og:type" content="article">
+<meta property="og:title" content="代码的方式操控CANoe">
+<meta property="og:url" content="http://example.com/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator%20copy/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="代码的方式操控CANoe一、背景与需求项目中希望在Linux上读写CANoe中的CAN&#x2F;LIN以及系统变量的值。CANoe只能运行在windows上，那么就需要两步走：  在Windows上通过python or 其他编程语言的方式读写CANoe中的CAN&#x2F;LIN以及系统变量的值  在此基础上封装一层RPC接口即可。   对于步骤1，调用com口肯定是能够做到的。秉持着不重复造轮子的心态，sear">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-11-19T13:01:15.000Z">
+<meta property="article:modified_time" content="2023-11-21T12:19:47.510Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+    <meta http-equiv="Cache-control" content="no-cache">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    
+    <title>代码的方式操控CANoe · SpaceY&#39;s Qzone</title>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Oswald-Regular';
+        src: url("/font/Oswald-Regular.ttf");
+    }
+
+    body {
+        margin: 0;
+    }
+
+    header,
+    footer,
+    .back-top,
+    .sidebar,
+    .container,
+    .site-intro-meta,
+    .toc-wrapper {
+        display: none;
+    }
+
+    .site-intro {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        /* height: 50vh; */
+        overflow: hidden;
+    }
+
+    .site-intro-placeholder {
+        position: absolute;
+        z-index: -2;
+        top: 0;
+        left: 0;
+        width: calc(100% + 300px);
+        height: 100%;
+        background: repeating-linear-gradient(-45deg, #444 0, #444 80px, #333 80px, #333 160px);
+        background-position: center center;
+        transform: translate3d(-226px, 0, 0);
+        animation: gradient-move 2.5s ease-out 0s infinite;
+    }
+
+    @keyframes gradient-move {
+        0% {
+            transform: translate3d(-226px, 0, 0);
+        }
+        100% {
+            transform: translate3d(0, 0, 0);
+        }
+    }
+
+</style>
+
+    <link rel="preload" href= "/css/style.css?v=20180824" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <link rel="stylesheet" href= "/css/mobile.css?v=20180824" media="(max-width: 980px)">
+    
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- /*! loadCSS. [c]2017 Filament Group, Inc. MIT License */
+/* This file is meant as a standalone workflow for
+- testing support for link[rel=preload]
+- enabling async CSS loading in browsers that do not support rel=preload
+- applying rel preload css once loaded, whether supported or not.
+*/ -->
+<script>
+(function( w ){
+	"use strict";
+	// rel=preload support test
+	if( !w.loadCSS ){
+		w.loadCSS = function(){};
+	}
+	// define on the loadCSS obj
+	var rp = loadCSS.relpreload = {};
+	// rel=preload feature support test
+	// runs once and returns a function for compat purposes
+	rp.support = (function(){
+		var ret;
+		try {
+			ret = w.document.createElement( "link" ).relList.supports( "preload" );
+		} catch (e) {
+			ret = false;
+		}
+		return function(){
+			return ret;
+		};
+	})();
+
+	// if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+	// then change that media back to its intended value on load
+	rp.bindMediaToggle = function( link ){
+		// remember existing media attr for ultimate state, or default to 'all'
+		var finalMedia = link.media || "all";
+
+		function enableStylesheet(){
+			link.media = finalMedia;
+		}
+
+		// bind load handlers to enable media
+		if( link.addEventListener ){
+			link.addEventListener( "load", enableStylesheet );
+		} else if( link.attachEvent ){
+			link.attachEvent( "onload", enableStylesheet );
+		}
+
+		// Set rel and non-applicable media type to start an async request
+		// note: timeout allows this to happen async to let rendering continue in IE
+		setTimeout(function(){
+			link.rel = "stylesheet";
+			link.media = "only x";
+		});
+		// also enable media after 3 seconds,
+		// which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+		setTimeout( enableStylesheet, 3000 );
+	};
+
+	// loop through link elements in DOM
+	rp.poly = function(){
+		// double check this to prevent external calls from running
+		if( rp.support() ){
+			return;
+		}
+		var links = w.document.getElementsByTagName( "link" );
+		for( var i = 0; i < links.length; i++ ){
+			var link = links[ i ];
+			// qualify links to those with rel=preload and as=style attrs
+			if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+				// prevent rerunning on link
+				link.setAttribute( "data-loadcss", true );
+				// bind listeners to toggle media back
+				rp.bindMediaToggle( link );
+			}
+		}
+	};
+
+	// if unsupported, run the polyfill
+	if( !rp.support() ){
+		// run once at least
+		rp.poly();
+
+		// rerun poly on an interval until onload
+		var run = w.setInterval( rp.poly, 500 );
+		if( w.addEventListener ){
+			w.addEventListener( "load", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		} else if( w.attachEvent ){
+			w.attachEvent( "onload", function(){
+				rp.poly();
+				w.clearInterval( run );
+			} );
+		}
+	}
+
+
+	// commonjs
+	if( typeof exports !== "undefined" ){
+		exports.loadCSS = loadCSS;
+	}
+	else {
+		w.loadCSS = loadCSS;
+	}
+}( typeof global !== "undefined" ? global : this ) );
+</script>
+
+    <link rel="icon" href= "/assets/favicon.ico" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js" as="script" />
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" as="script" />
+    <link rel="preload" href="/scripts/main.js" as="script" />
+    <link rel="preload" as="font" href="/font/Oswald-Regular.ttf" crossorigin>
+    <link rel="preload" as="font" href="https://at.alicdn.com/t/font_327081_1dta1rlogw17zaor.woff" crossorigin>
+    
+    <!-- fancybox -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script>
+    <!-- 百度统计  -->
+    
+    <!-- 谷歌统计  -->
+    
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+    
+        <body class="post-body">
+    
+    
+<header class="header">
+
+    <div class="read-progress"></div>
+    <div class="header-sidebar-menu">&#xe775;</div>
+    <!-- post页的toggle banner  -->
+    
+    <div class="banner">
+            <div class="blog-title">
+                <a href="/" >SpaceY&#39;s Qzone.</a>
+            </div>
+            <div class="post-title">
+                <a href="#" class="post-name">代码的方式操控CANoe</a>
+            </div>
+    </div>
+    
+    <a class="home-link" href=/>SpaceY's Qzone.</a>
+</header>
+    <div class="wrapper">
+        <div class="site-intro" style="
+
+
+
+
+
+
+
+height:50vh;
+">
+    
+    <!-- 主页  -->
+    
+    
+    <!-- 404页  -->
+            
+    <div class="site-intro-placeholder"></div>
+    <div class="site-intro-img" style="background-image: url(/intro/post-bg.jpg)"></div>
+    <div class="site-intro-meta">
+        <!-- 标题  -->
+        <h1 class="intro-title">
+            <!-- 主页  -->
+            
+            代码的方式操控CANoe
+            <!-- 404 -->
+            
+        </h1>
+        <!-- 副标题 -->
+        <p class="intro-subtitle">
+            <!-- 主页副标题  -->
+            
+            
+            <!-- 404 -->
+            
+        </p>
+        <!-- 文章页meta -->
+        
+            <div class="post-intros">
+                <!-- 文章页标签  -->
+                
+                
+                    <div class="post-intro-read">
+                        <span>Word count: <span class="post-count word-count">1.8k</span>Reading time: <span class="post-count reading-time">9 min</span></span>
+                    </div>
+                
+                <div class="post-intro-meta">
+                    <span class="post-intro-calander iconfont-archer">&#xe676;</span>
+                    <span class="post-intro-time">2023/11/19</span>
+                    
+                    <span id="busuanzi_container_page_pv" class="busuanzi-pv">
+                        <span class="iconfont-archer">&#xe602;</span>
+                        <span id="busuanzi_value_page_pv"></span>
+                    </span>
+                    
+                    <span class="shareWrapper">
+                        <span class="iconfont-archer shareIcon">&#xe71d;</span>
+                        <span class="shareText">Share</span>
+                        <ul class="shareList">
+                            <li class="iconfont-archer share-qr" data-type="qr">&#xe75b;
+                                <div class="share-qrcode"></div>
+                            </li>
+                            <li class="iconfont-archer" data-type="weibo">&#xe619;</li>
+                            <li class="iconfont-archer" data-type="qzone">&#xe62e;</li>
+                            <li class="iconfont-archer" data-type="twitter">&#xe634;</li>
+                            <li class="iconfont-archer" data-type="facebook">&#xe67a;</li>
+                        </ul>
+                    </span>
+                </div>
+            </div>
+        
+    </div>
+</div>
+        <script>
+ 
+  // get user agent
+  var browser = {
+    versions: function () {
+      var u = window.navigator.userAgent;
+      return {
+        userAgent: u,
+        trident: u.indexOf('Trident') > -1, //IE内核
+        presto: u.indexOf('Presto') > -1, //opera内核
+        webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+        gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+        mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+        ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+        android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或者uc浏览器
+        iPhone: u.indexOf('iPhone') > -1 || u.indexOf('Mac') > -1, //是否为iPhone或者安卓QQ浏览器
+        iPad: u.indexOf('iPad') > -1, //是否为iPad
+        webApp: u.indexOf('Safari') == -1, //是否为web应用程序，没有头部与底部
+        weixin: u.indexOf('MicroMessenger') == -1, //是否为微信浏览器
+        uc: u.indexOf('UCBrowser') > -1 //是否为android下的UC浏览器
+      };
+    }()
+  }
+  console.log("userAgent:" + browser.versions.userAgent);
+
+  // callback
+  function fontLoaded() {
+    console.log('font loaded');
+    if (document.getElementsByClassName('site-intro-meta')) {
+      document.getElementsByClassName('intro-title')[0].classList.add('intro-fade-in');
+      document.getElementsByClassName('intro-subtitle')[0].classList.add('intro-fade-in');
+      var postIntros = document.getElementsByClassName('post-intros')[0]
+      if (postIntros) {
+        postIntros.classList.add('post-fade-in');
+      }
+    }
+  }
+
+  // UC不支持跨域，所以直接显示
+  function asyncCb(){
+    if (browser.versions.uc) {
+      console.log("UCBrowser");
+      fontLoaded();
+    } else {
+      WebFont.load({
+        custom: {
+          families: ['Oswald-Regular']
+        },
+        loading: function () {  //所有字体开始加载
+          // console.log('loading');
+        },
+        active: function () {  //所有字体已渲染
+          fontLoaded();
+        },
+        inactive: function () { //字体预加载失败，无效字体或浏览器不支持加载
+          console.log('inactive: timeout');
+          fontLoaded();
+        },
+        timeout: 5000 // Set the timeout to two seconds
+      });
+    }
+  }
+
+  function asyncErr(){
+    console.warn('script load from CDN failed, will load local script')
+  }
+
+  // load webfont-loader async, and add callback function
+  function async(u, cb, err) {
+    var d = document, t = 'script',
+      o = d.createElement(t),
+      s = d.getElementsByTagName(t)[0];
+    o.src = u;
+    if (cb) { o.addEventListener('load', function (e) { cb(null, e); }, false); }
+    if (err) { o.addEventListener('error', function (e) { err(null, e); }, false); }
+    s.parentNode.insertBefore(o, s);
+  }
+
+  var asyncLoadWithFallBack = function(arr, success, reject) {
+      var currReject = function(){
+        reject()
+        arr.shift()
+        if(arr.length)
+          async(arr[0], success, currReject)
+        }
+
+      async(arr[0], success, currReject)
+  }
+
+  asyncLoadWithFallBack([
+    "https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.min.js", 
+    "https://cdn.bootcss.com/webfont/1.6.28/webfontloader.js",
+    "/lib/webfontloader.min.js"
+  ], asyncCb, asyncErr)
+</script>        
+        <img class="loading" src="/assets/loading.svg" style="display: block; margin: 6rem auto 0 auto; width: 6rem; height: 6rem;" />
+        <div class="container container-unloaded">
+            <main class="main post-page">
+    <article class="article-entry">
+        <h1 id="代码的方式操控CANoe"><a href="#代码的方式操控CANoe" class="headerlink" title="代码的方式操控CANoe"></a>代码的方式操控CANoe</h1><h2 id="一、背景与需求"><a href="#一、背景与需求" class="headerlink" title="一、背景与需求"></a>一、背景与需求</h2><p>项目中希望在Linux上读写CANoe中的CAN/LIN以及系统变量的值。CANoe只能运行在windows上，那么就需要两步走：</p>
+<ol>
+<li><p>在Windows上通过python or 其他编程语言的方式读写CANoe中的CAN/LIN以及系统变量的值</p>
+</li>
+<li><p>在此基础上封装一层RPC接口即可。</p>
+</li>
+</ol>
+<p>对于步骤1，调用com口肯定是能够做到的。秉持着不重复造轮子的心态，search到了国外大佬写的第三方库py_canoe(也是基于com口实现的)，虽然支持的功能不是特别多，但是对于现阶段的项目足够用了。</p>
+<p>对于步骤2，决定使用python中用的比较多的gRPC，定义一个proto文件，分别实现client和server。</p>
+<h2 id="二、Win上实现操控CANoe并读写"><a href="#二、Win上实现操控CANoe并读写" class="headerlink" title="二、Win上实现操控CANoe并读写"></a>二、Win上实现操控CANoe并读写</h2><h3 id="2-1-py-canoe官方文档"><a href="#2-1-py-canoe官方文档" class="headerlink" title="2.1 py_canoe官方文档"></a>2.1 py_canoe官方文档</h3><p><a target="_blank" rel="noopener" href="https://chaitu-ycr.github.io/py_canoe/">https://chaitu-ycr.github.io/py_canoe/</a></p>
+<h3 id="2-2-示例代码"><a href="#2-2-示例代码" class="headerlink" title="2.2 示例代码"></a>2.2 示例代码</h3><p>直接上脱敏后的example code，项目中只用到了启停工程以及读写can/lin/sys var。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> py_canoe <span class="keyword">import</span> CANoe</span><br><span class="line">canoe_inst = CANoe()</span><br><span class="line">canoe_inst.<span class="built_in">open</span>(canoe_cfg=<span class="string">r&#x27;D:\soa_group\CANoe_Project\test_CANoe_horn_20230531_162023\TestConfig.cfg&#x27;</span>)</span><br><span class="line">canoe_inst.start_measurement()</span><br><span class="line"></span><br><span class="line"><span class="comment"># get sys var</span></span><br><span class="line">sys_var_val = canoe_inst.get_system_variable_value(<span class="string">&quot;VTS::M4_Ch1::CurBit&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># set sys var</span></span><br><span class="line">canoe_inst.set_system_variable_value(<span class="string">&quot;VTS::M4_Ch1::xxx&quot;</span>, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># get can signal</span></span><br><span class="line">bus = <span class="string">&#x27;CAN&#x27;</span></span><br><span class="line">channel = <span class="number">1</span></span><br><span class="line">message = <span class="string">&#x27;xxx&#x27;</span></span><br><span class="line">signal = <span class="string">&#x27;xxx&#x27;</span></span><br><span class="line">sig_val = canoe_inst.get_signal_value(bus, channel, message, signal)</span><br><span class="line"></span><br><span class="line"><span class="comment"># set can signal</span></span><br><span class="line">set_value = <span class="number">1</span></span><br><span class="line">canoe_inst.set_signal_value(bus, channel, message, signal, set_value)</span><br><span class="line"></span><br><span class="line">canoe_inst.stop_measurement()</span><br></pre></td></tr></table></figure>
+
+<h2 id="三、Linux上实现操控CANoe并读写"><a href="#三、Linux上实现操控CANoe并读写" class="headerlink" title="三、Linux上实现操控CANoe并读写"></a>三、Linux上实现操控CANoe并读写</h2><p>上面的示例代码，在Windows上已经实现了通过代码的方式控制CANoe。现在的需求是在Linux上控制CANoe。加一层rpc即可，将Linux端作为client，Windows端作为server。这里选用的是gRPC。</p>
+<h3 id="3-1-gRPC中文文档"><a href="#3-1-gRPC中文文档" class="headerlink" title="3.1 gRPC中文文档"></a>3.1 gRPC中文文档</h3><p><a target="_blank" rel="noopener" href="http://doc.oschina.net/grpc?t=60138">http://doc.oschina.net/grpc?t=60138</a></p>
+<p>整理的steps如下：</p>
+<ol>
+<li><p>定义protobuf</p>
+</li>
+<li><p>对protobuf进行编译 </p>
+</li>
+<li><p>编写server和client代码</p>
+</li>
+</ol>
+<h3 id="3-2-编写proto文件"><a href="#3-2-编写proto文件" class="headerlink" title="3.2 编写proto文件"></a>3.2 编写proto文件</h3><p>gRPC上来需要定义一个proto文件，规定交互的接口以及数据内容。</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line">syntax = <span class="string">&quot;proto3&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. canoe.proto</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">Canoe</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> start_canoe(StartCanoeReq) <span class="keyword">returns</span>(BoolResp)</span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> stop_canoe(Empty) <span class="keyword">returns</span>(BoolResp)</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> get_signal(GetSignalReq) <span class="keyword">returns</span>(GetSignalResp)</span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> set_signal(SetSignalReq) <span class="keyword">returns</span>(BoolResp)</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> get_vt(GetVtReq) <span class="keyword">returns</span>(GetVtResp)</span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> set_vt(SetVtReq) <span class="keyword">returns</span>(BoolResp)</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> try_sig_match(TrySigReq) <span class="keyword">returns</span>(BoolResp)</span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> try_sig_not_match(TrySigReq) <span class="keyword">returns</span>(BoolResp)</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> try_vt_match(TryVtReq) <span class="keyword">returns</span>(BoolResp)</span>&#123;&#125;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> try_vt_not_match(TryVtReq) <span class="keyword">returns</span>(BoolResp)</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">GetSignalReq</span></span>&#123;</span><br><span class="line">    <span class="built_in">string</span> bus = <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">int32</span> channel = <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">string</span> <span class="class"><span class="keyword">message</span> = 3;</span></span><br><span class="line"><span class="class">    <span class="title">string</span> signal = 4;</span></span><br><span class="line"><span class="class">&#125;</span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class">message GetSignalResp</span>&#123;</span><br><span class="line">    <span class="built_in">float</span> sig_val = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">SetSignalReq</span></span>&#123;</span><br><span class="line">    <span class="built_in">string</span> bus = <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">int32</span> channel = <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">string</span> <span class="class"><span class="keyword">message</span> = 3;</span></span><br><span class="line"><span class="class">    <span class="title">string</span> signal = 4;</span></span><br><span class="line"><span class="class">    float set_value = 5;</span></span><br><span class="line"><span class="class">&#125;</span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class">message GetVtReq</span>&#123;</span><br><span class="line">    <span class="built_in">string</span> vt = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">GetVtResp</span></span>&#123;</span><br><span class="line">    <span class="built_in">float</span> sys_var_val = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">SetVtReq</span></span>&#123;</span><br><span class="line">    <span class="built_in">string</span> vt = <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">float</span> set_value = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">StartCanoeReq</span></span>&#123;</span><br><span class="line">    <span class="built_in">string</span> project_path = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">BoolResp</span></span>&#123;</span><br><span class="line">    <span class="built_in">bool</span> res = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">TrySigReq</span></span>&#123;</span><br><span class="line">    <span class="built_in">string</span> bus = <span class="number">1</span>;</span><br><span class="line">    <span class="built_in">int32</span> channel = <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">string</span> <span class="class"><span class="keyword">message</span> = 3;</span></span><br><span class="line"><span class="class">    <span class="title">string</span> signal = 4;</span></span><br><span class="line"><span class="class">    repeated float expected_value = 5;</span></span><br><span class="line"><span class="class">    int32 timer_t = 6;</span></span><br><span class="line"><span class="class">&#125;</span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class">message TryVtReq</span>&#123;</span><br><span class="line">    <span class="built_in">string</span> vt = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">repeated</span> <span class="built_in">float</span> expected_value = <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">int32</span> timer_t = <span class="number">3</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">Empty</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-3-grpc-tools-protoc编译"><a href="#3-3-grpc-tools-protoc编译" class="headerlink" title="3.3 grpc_tools.protoc编译"></a>3.3 grpc_tools.protoc编译</h3><p>基于canoe.proto文件，使用如下命令对proto文件进行编译</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. canoe.pro</span><br></pre></td></tr></table></figure>
+
+<p>此时会生成两个文件</p>
+<ul>
+<li><p>xxx_pb2.py：就是用protoc得到的文件(proto的数据结构)</p>
+</li>
+<li><p>xxx_pb2_grpc.py：定义了client和server的class</p>
+</li>
+</ul>
+<h3 id="3-4-Server代码"><a href="#3-4-Server代码" class="headerlink" title="3.4 Server代码"></a>3.4 Server代码</h3><p>server的代码需要继承canoe_pb2_grpc.CanoeServicer并重写里面的method。没太多的套路和坑。代码如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">继承canoe_pb2_grpc.CanoeServicer 实现server的代码(run on Windows)</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">List</span>, <span class="type">Union</span></span><br><span class="line"><span class="keyword">from</span> time <span class="keyword">import</span> sleep</span><br><span class="line"><span class="keyword">from</span> py_canoe <span class="keyword">import</span> CANoe</span><br><span class="line"><span class="keyword">import</span> grpc</span><br><span class="line"><span class="keyword">from</span> concurrent <span class="keyword">import</span> futures</span><br><span class="line"><span class="keyword">import</span> canoe_pb2_grpc</span><br><span class="line"><span class="keyword">import</span> canoe_pb2</span><br><span class="line"></span><br><span class="line">interval = <span class="number">10</span></span><br><span class="line">called, running = <span class="literal">False</span>, <span class="literal">False</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">wait</span>(<span class="params">wait_time</span>):</span></span><br><span class="line">    sleep(wait_time / <span class="number">1000</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">check_val_match</span>(<span class="params">expected_value: <span class="type">List</span>[<span class="built_in">float</span>], real_value: <span class="type">Union</span>[<span class="built_in">float</span>, <span class="built_in">int</span>]</span>) -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    <span class="string">&quot;&quot;&quot;单值 or 区间校验</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        expected_value: 长度=1or2的list</span></span><br><span class="line"><span class="string">        real_value: 区间值</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Returns: bool</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(expected_value) == <span class="number">2</span>:</span><br><span class="line">        <span class="keyword">return</span> expected_value[<span class="number">0</span>] &lt; real_value &lt; expected_value[<span class="number">1</span>]</span><br><span class="line">    <span class="keyword">elif</span> <span class="built_in">len</span>(expected_value) == <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">return</span> expected_value[<span class="number">0</span>] == real_value</span><br><span class="line"></span><br><span class="line">    <span class="keyword">raise</span> ValueError(<span class="string">&quot;expected_value is not &lt;x-y&gt; or single value&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CanoeServer</span>(<span class="params">canoe_pb2_grpc.CanoeServicer</span>):</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self</span>):</span></span><br><span class="line">        self.canoe_inst = CANoe()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">start_canoe</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        <span class="keyword">global</span> called, running</span><br><span class="line">        called, running = <span class="literal">True</span>, <span class="literal">True</span></span><br><span class="line">        self.canoe_inst.<span class="built_in">open</span>(canoe_cfg=request.project_path)</span><br><span class="line">        self.canoe_inst.start_measurement()</span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">stop_canoe</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        self.canoe_inst.stop_measurement()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># canoe_inst.reset_measurement()</span></span><br><span class="line">        <span class="comment"># canoe_inst.quit()</span></span><br><span class="line">        <span class="keyword">global</span> running</span><br><span class="line">        running = <span class="literal">False</span></span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_signal</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        sig_val = self.canoe_inst.get_signal_value(request.bus, request.channel, request.message, request.signal)</span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.GetSignalResp(sig_val=sig_val)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">set_signal</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        self.canoe_inst.set_signal_value(request.bus, request.channel, request.message, request.signal,</span><br><span class="line">                                         request.set_value)</span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get_vt</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        <span class="comment"># print(&quot;request.vt:&#123;&#125;&quot;.format(request.vt))</span></span><br><span class="line">        sys_var_val = self.canoe_inst.get_system_variable_value(request.vt)</span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.GetVtResp(sys_var_val=sys_var_val)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">set_vt</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        self.canoe_inst.set_system_variable_value(request.vt, request.set_value)</span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">try_sig_match</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        remain_time = request.timer_t</span><br><span class="line">        <span class="keyword">while</span> remain_time &gt; <span class="number">0</span>:</span><br><span class="line">            real_value = self.canoe_inst.get_signal_value(request.bus, request.channel, request.message, request.signal)</span><br><span class="line">            <span class="comment"># print(&quot;real_value:&#123;&#125;&quot;.format(real_value))</span></span><br><span class="line">            <span class="keyword">if</span> check_val_match(request.expected_value, real_value):</span><br><span class="line">                <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">True</span>)</span><br><span class="line">            remain_time = remain_time - interval</span><br><span class="line">            wait(interval)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">try_sig_not_match</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        remain_time = request.timer_t</span><br><span class="line">        <span class="keyword">while</span> remain_time &gt; <span class="number">0</span>:</span><br><span class="line">            real_value = self.canoe_inst.get_signal_value(request.bus, request.channel, request.message, request.signal)</span><br><span class="line">            <span class="keyword">if</span> check_val_match(request.expected_value, real_value):</span><br><span class="line">                <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">False</span>)</span><br><span class="line">            remain_time = remain_time - interval</span><br><span class="line">            wait(interval)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">try_vt_match</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        remain_time = request.timer_t</span><br><span class="line">        <span class="keyword">while</span> remain_time &gt; <span class="number">0</span>:</span><br><span class="line"></span><br><span class="line">            real_value = self.canoe_inst.get_system_variable_value(request.vt)</span><br><span class="line">            <span class="keyword">if</span> check_val_match(request.expected_value, real_value):</span><br><span class="line">                <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">True</span>)</span><br><span class="line">            remain_time = remain_time - interval</span><br><span class="line">            wait(interval)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">try_vt_not_match</span>(<span class="params">self, request, context</span>):</span></span><br><span class="line">        remain_time = request.timer_t</span><br><span class="line">        <span class="keyword">while</span> remain_time &gt; <span class="number">0</span>:</span><br><span class="line"></span><br><span class="line">            real_value = self.canoe_inst.get_system_variable_value(request.vt)</span><br><span class="line">            <span class="keyword">if</span> check_val_match(request.expected_value, real_value):</span><br><span class="line">                <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">False</span>)</span><br><span class="line">            remain_time = remain_time - interval</span><br><span class="line">            wait(interval)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> canoe_pb2.BoolResp(res=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">run</span>():</span></span><br><span class="line">    <span class="keyword">global</span> called, running</span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        called, running = <span class="literal">False</span>, <span class="literal">False</span></span><br><span class="line">        server = grpc.server(futures.ThreadPoolExecutor(max_workers=<span class="number">5</span>))</span><br><span class="line">        canoe_pb2_grpc.add_CanoeServicer_to_server(CanoeServer(), server)</span><br><span class="line">        server.add_insecure_port(<span class="string">&quot;[::]:50001&quot;</span>)</span><br><span class="line">        server.start()</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;Server is ready for connecting...&#x27;</span>)</span><br><span class="line">        <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">            <span class="keyword">if</span> called == <span class="literal">True</span> <span class="keyword">and</span> running == <span class="literal">False</span>:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            time.sleep(<span class="number">1</span>)</span><br><span class="line">        server.stop(<span class="number">0</span>)</span><br><span class="line">        server.wait_for_termination()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    run()</span><br></pre></td></tr></table></figure>
+
+<h3 id="Server代码打包"><a href="#Server代码打包" class="headerlink" title="Server代码打包"></a>Server代码打包</h3><p>除开有新的需求外，server的代码基本是不需要变动的，所以打包成可执行文件使用会更方便。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pyinstaller -F .\canoe_server.py -p .\canoe_pb2.py -p .\canoe_pb2_grpc.py  --clean</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-5-Client代码"><a href="#3-5-Client代码" class="headerlink" title="3.5 Client代码"></a>3.5 Client代码</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> grpc</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line">current_path = os.path.abspath(os.path.dirname(__file__))</span><br><span class="line">sys.path.append(current_path)</span><br><span class="line"><span class="keyword">import</span> canoe_pb2</span><br><span class="line"><span class="keyword">import</span> canoe_pb2_grpc</span><br><span class="line"></span><br><span class="line">sys.path.append(os.path.join(current_path, <span class="string">&quot;..&quot;</span>))</span><br><span class="line"><span class="keyword">from</span> load_config <span class="keyword">import</span> project_config</span><br><span class="line"></span><br><span class="line">windows_ip = project_config.get(<span class="string">&#x27;CANoe&#x27;</span>, <span class="string">&#x27;windows_ip&#x27;</span>)</span><br><span class="line">port = project_config.get(<span class="string">&#x27;CANoe&#x27;</span>, <span class="string">&#x27;port&#x27;</span>)</span><br><span class="line">canoe_project_path = project_config.get(<span class="string">&#x27;CANoe&#x27;</span>, <span class="string">&#x27;project_path&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># server_url = &#x27;10.110.xxx.xx:8001&#x27;</span></span><br><span class="line">server_url = <span class="built_in">str</span>(windows_ip) + <span class="string">&quot;:&quot;</span> + <span class="built_in">str</span>(port)</span><br><span class="line"></span><br><span class="line"><span class="comment"># channel = grpc.insecure_channel(&quot;10.110.177.187:50001&quot;)</span></span><br><span class="line">channel = grpc.insecure_channel(server_url)</span><br><span class="line">stub = canoe_pb2_grpc.CanoeStub(channel)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">start_canoe</span>(<span class="params">project_path=canoe_project_path</span>) -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    response = stub.start_canoe(canoe_pb2.StartCanoeReq(project_path=project_path))</span><br><span class="line">    <span class="keyword">return</span> response.res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">stop_canoe</span>() -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    response = stub.stop_canoe(canoe_pb2.Empty())</span><br><span class="line">    <span class="keyword">return</span> response.res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_signal</span>(<span class="params">bus, channel, message, signal</span>) -&gt; <span class="built_in">float</span>:</span></span><br><span class="line">    response = stub.get_signal(canoe_pb2.GetSignalReq(bus=bus, channel=channel, message=message, signal=signal))</span><br><span class="line">    <span class="keyword">return</span> response.sig_val</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">set_signal</span>(<span class="params">bus, channel, message, signal, set_value</span>) -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    response = stub.set_signal(</span><br><span class="line">        canoe_pb2.SetSignalReq(bus=bus, channel=channel, message=message, signal=signal, set_value=set_value))</span><br><span class="line">    <span class="keyword">return</span> response.res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_vt</span>(<span class="params">vt</span>) -&gt; <span class="built_in">float</span>:</span></span><br><span class="line">    response = stub.get_vt(canoe_pb2.GetVtReq(vt=vt))</span><br><span class="line">    <span class="keyword">return</span> response.sys_var_val</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">set_vt</span>(<span class="params">vt, set_value</span>) -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    response = stub.set_vt(canoe_pb2.SetVtReq(vt=vt, set_value=set_value))</span><br><span class="line">    <span class="keyword">return</span> response.res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">try_sig_match</span>(<span class="params">bus, channel, message, signal, expected_value, timer_t</span>) -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    response = stub.try_sig_match(</span><br><span class="line">        canoe_pb2.TrySigReq(bus=bus, channel=channel, message=message, signal=signal, expected_value=expected_value,</span><br><span class="line">                            timer_t=timer_t))</span><br><span class="line">    <span class="keyword">return</span> response.res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">try_sig_not_match</span>(<span class="params">bus, channel, message, signal, expected_value, timer_t</span>) -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    response = stub.try_sig_not_match(</span><br><span class="line">        canoe_pb2.TrySigReq(bus=bus, channel=channel, message=message, signal=signal, expected_value=expected_value,</span><br><span class="line">                            timer_t=timer_t))</span><br><span class="line">    <span class="keyword">return</span> response.res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">try_vt_match</span>(<span class="params">vt, expected_value, timer_t</span>) -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    response = stub.try_vt_match(canoe_pb2.TryVtReq(vt=vt, expected_value=expected_value, timer_t=timer_t))</span><br><span class="line">    <span class="keyword">return</span> response.res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">try_vt_not_match</span>(<span class="params">vt, expected_value, timer_t</span>) -&gt; <span class="built_in">bool</span>:</span></span><br><span class="line">    response = stub.try_vt_not_match(canoe_pb2.TryVtReq(vt=vt, expected_value=expected_value, timer_t=timer_t))</span><br><span class="line">    <span class="keyword">return</span> response.res</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">example</span>():</span></span><br><span class="line">    start_canoe(project_path=<span class="string">r&quot;D:\soa_group\011CANoeProject\Common\common.cfg&quot;</span>)</span><br><span class="line"></span><br><span class="line">    signal_val = get_signal(<span class="string">&quot;CAN&quot;</span>, <span class="number">1</span>, <span class="string">&quot;msg&quot;</span>, <span class="string">&quot;sig&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;get_signal-signal_val:&#123;&#125;&quot;</span>.<span class="built_in">format</span>(signal_val))</span><br><span class="line"></span><br><span class="line">    res = set_signal(<span class="string">&quot;CAN&quot;</span>, <span class="number">1</span>, <span class="string">&quot;msg&quot;</span>, <span class="string">&quot;sig&quot;</span>, <span class="number">1</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;set_signal-res:&#123;&#125;&quot;</span>.<span class="built_in">format</span>(res))</span><br><span class="line"></span><br><span class="line">    sys_var_val = get_vt(vt=<span class="string">&quot;VTS::VT1004_1::IsOffline&quot;</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;get_vt-sys_var_val:&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(sys_var_val))</span><br><span class="line"></span><br><span class="line">    res = set_vt(vt=<span class="string">&quot;test::one&quot;</span>, set_value=<span class="number">1000</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;set_vt-res:&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(res))</span><br><span class="line"></span><br><span class="line">    res = try_vt_match(vt=<span class="string">&quot;test::one&quot;</span>, expected_value=[-<span class="number">1</span>, <span class="number">1</span>], timer_t=<span class="number">1000</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;try_vt_match-res:&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(res))</span><br><span class="line"></span><br><span class="line">    res = try_vt_not_match(vt=<span class="string">&quot;test::one&quot;</span>, expected_value=[-<span class="number">1</span>, <span class="number">1</span>], timer_t=<span class="number">1000</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;try_vt_not_match-res:&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(res))</span><br><span class="line"></span><br><span class="line">    res = try_sig_match(bus=<span class="string">&quot;CAN&quot;</span>, channel=<span class="number">1</span>, message=<span class="string">&quot;msg&quot;</span>, signal=<span class="string">&quot;sig&quot;</span>, expected_value=[-<span class="number">1</span>, <span class="number">1</span>],</span><br><span class="line">                        timer_t=<span class="number">1000</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;try_sig_match-try sig res:&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(res))</span><br><span class="line"></span><br><span class="line">    res = try_sig_not_match(bus=<span class="string">&quot;CAN&quot;</span>, channel=<span class="number">1</span>, message=<span class="string">&quot;msg&quot;</span>, signal=<span class="string">&quot;sig&quot;</span>, expected_value=[-<span class="number">1</span>, <span class="number">1</span>],</span><br><span class="line">                            timer_t=<span class="number">1000</span>)</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;try_sig_not_match-try sig res:&#123;&#125;&#x27;</span>.<span class="built_in">format</span>(res))</span><br><span class="line"></span><br><span class="line">    stop_canoe()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    example()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+    </article>
+    <!-- license  -->
+    
+    <!-- paginator  -->
+    <ul class="post-paginator">
+        <li class="next">
+            
+                <div class="nextSlogan">Next Post</div>
+                <a href= "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator/" title= "Python iterator iterable">
+                    <div class="nextTitle">Python iterator iterable</div>
+                </a>
+            
+        </li>
+        <li class="previous">
+            
+                <div class="prevSlogan">Previous Post</div>
+                <a href= "/2023/11/19/%E5%91%A8%E6%9B%B4flag/" title= "周更flag 避免失业">
+                    <div class="prevTitle">周更flag 避免失业</div>
+                </a>
+            
+        </li>
+    </ul>
+    <!-- 评论插件 -->
+    <!-- 来必力City版安装代码 -->
+
+    <div id="lv-container" data-id="city" data-uid= MTAyMC81MzA2NS8yOTU0MQ==>
+        <script type="text/javascript">
+            (function (d, s) {
+                var j, e = d.getElementsByTagName(s)[0];
+                if (typeof LivereTower === 'function') { return; }
+                j = d.createElement(s);
+                j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+                j.async = true;
+
+                e.parentNode.insertBefore(j, e);
+            })(document, 'script');
+        </script>
+        <noscript>为正常使用来必力评论功能请激活JavaScript</noscript>
+    </div>
+
+<!-- City版安装代码已完成 -->
+    
+    
+    <!-- gitalk评论 -->
+
+    <!-- utteranc评论 -->
+
+    <!-- partial('_partial/comment/changyan') -->
+    <!--PC版-->
+
+
+    
+    
+
+    <!-- 评论 -->
+</main>
+            <!-- profile -->
+            
+        </div>
+        <footer class="footer footer-unloaded">
+    <!-- social  -->
+    
+    <div class="social">
+        
+    
+        
+            
+                <a href="mailto:hqc@tongji.edu.cn" class="iconfont-archer email" title=email ></a>
+            
+        
+    
+        
+            
+                <a href="//github.com/tvtaqa" class="iconfont-archer github" target="_blank" title=github></a>
+            
+        
+    
+        
+            
+                <span class="iconfont-archer wechat" title=wechat>
+                  
+                  <img class="profile-qr" src="/assets/wechat_qr.jpg" />
+                </span>
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+    </div>
+    
+    <!-- powered by Hexo  -->
+    <div class="copyright">
+        <span id="hexo-power">Powered by <a href="https://hexo.io/" target="_blank">Hexo</a></span><span class="iconfont-archer power">&#xe635;</span><span id="theme-info">theme <a href="https://github.com/fi3ework/hexo-theme-archer" target="_blank">Archer</a></span>
+    </div>
+    <!-- 不蒜子  -->
+    
+    <div class="busuanzi-container">
+    
+     
+    <span id="busuanzi_container_site_pv">PV: <span id="busuanzi_value_site_pv"></span> :)</span>
+    
+    </div>
+    
+</footer>
+    </div>
+    <!-- toc -->
+    
+    <div class="toc-wrapper" style=
+    
+
+
+
+
+
+
+
+top:50vh;
+
+    >
+        <div class="toc-catalog">
+            <span class="iconfont-archer catalog-icon">&#xe613;</span><span>CATALOG</span>
+        </div>
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BB%A3%E7%A0%81%E7%9A%84%E6%96%B9%E5%BC%8F%E6%93%8D%E6%8E%A7CANoe"><span class="toc-number">1.</span> <span class="toc-text">代码的方式操控CANoe</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%83%8C%E6%99%AF%E4%B8%8E%E9%9C%80%E6%B1%82"><span class="toc-number">1.1.</span> <span class="toc-text">一、背景与需求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Win%E4%B8%8A%E5%AE%9E%E7%8E%B0%E6%93%8D%E6%8E%A7CANoe%E5%B9%B6%E8%AF%BB%E5%86%99"><span class="toc-number">1.2.</span> <span class="toc-text">二、Win上实现操控CANoe并读写</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-py-canoe%E5%AE%98%E6%96%B9%E6%96%87%E6%A1%A3"><span class="toc-number">1.2.1.</span> <span class="toc-text">2.1 py_canoe官方文档</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.2 示例代码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81Linux%E4%B8%8A%E5%AE%9E%E7%8E%B0%E6%93%8D%E6%8E%A7CANoe%E5%B9%B6%E8%AF%BB%E5%86%99"><span class="toc-number">1.3.</span> <span class="toc-text">三、Linux上实现操控CANoe并读写</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-gRPC%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3"><span class="toc-number">1.3.1.</span> <span class="toc-text">3.1 gRPC中文文档</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%BC%96%E5%86%99proto%E6%96%87%E4%BB%B6"><span class="toc-number">1.3.2.</span> <span class="toc-text">3.2 编写proto文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-grpc-tools-protoc%E7%BC%96%E8%AF%91"><span class="toc-number">1.3.3.</span> <span class="toc-text">3.3 grpc_tools.protoc编译</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-Server%E4%BB%A3%E7%A0%81"><span class="toc-number">1.3.4.</span> <span class="toc-text">3.4 Server代码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Server%E4%BB%A3%E7%A0%81%E6%89%93%E5%8C%85"><span class="toc-number">1.3.5.</span> <span class="toc-text">Server代码打包</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-Client%E4%BB%A3%E7%A0%81"><span class="toc-number">1.3.6.</span> <span class="toc-text">3.5 Client代码</span></a></li></ol></li></ol></li></ol>
+    </div>
+    
+    <div class="back-top iconfont-archer">&#xe639;</div>
+    <div class="sidebar sidebar-hide">
+    <ul class="sidebar-tabs sidebar-tabs-active-0">
+        <li class="sidebar-tab-archives"><span class="iconfont-archer">&#xe67d;</span><span class="tab-name">Archive</span></li>
+        <li class="sidebar-tab-tags"><span class="iconfont-archer">&#xe61b;</span><span class="tab-name">Tag</span></li>
+        <li class="sidebar-tab-categories"><span class="iconfont-archer">&#xe666;</span><span class="tab-name">Cate</span></li>
+    </ul>
+    <div class="sidebar-content sidebar-content-show-archive">
+          <div class="sidebar-panel-archives">
+    <!-- 在ejs中将archive按照时间排序 -->
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="total-and-search">
+        <div class="total-archive">
+        Total : 22
+        </div>
+        <!-- search  -->
+        
+    </div>
+    
+    <div class="post-archive">
+    
+    
+    
+    
+    <div class="archive-year"> 2025 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">02/24</span><a class="archive-post-title" href= "/2025/02/24/test/" >this is a test file</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2023 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator/" >Python iterator iterable</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/python%E4%B8%AD%E7%9A%84iterable%20iterator%20copy/" >代码的方式操控CANoe</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">11/19</span><a class="archive-post-title" href= "/2023/11/19/%E5%91%A8%E6%9B%B4flag/" >周更flag 避免失业</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/01</span><a class="archive-post-title" href= "/2023/06/01/C++%E5%AD%97%E8%8A%82%E5%AF%B9%E9%BD%90/" >C++字节对齐</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/01</span><a class="archive-post-title" href= "/2023/05/01/%E8%A7%A3%E6%9E%90protobuf%E4%BF%A1%E6%81%AF/" >Python Protobuf descriptor解析.proto文件</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2022 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/04</span><a class="archive-post-title" href= "/2022/03/04/OpenStack%E9%83%A8%E7%BD%B2/" >OpenStack部署</a>
+        </li>
+    
+    
+    
+    
+    
+        </ul>
+    
+    <div class="archive-year"> 2021 </div>
+    <ul class="year-list">
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">09/29</span><a class="archive-post-title" href= "/2021/09/29/Back-off-restarting-failed-container/" >Back-off restarting failed container</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">08/12</span><a class="archive-post-title" href= "/2021/08/12/ARIMA%E6%A8%A1%E5%9E%8Bpython/" >ARIMA模型python</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">07/25</span><a class="archive-post-title" href= "/2021/07/25/hexo%E5%8D%9A%E5%AE%A2%E8%BF%81%E7%A7%BB%E8%87%B3%E6%96%B0%E7%94%B5%E8%84%91/" >hexo博客迁移至新电脑</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/26</span><a class="archive-post-title" href= "/2021/06/26/JDBC%E5%B0%8F%E7%BB%93/" >JDBC小结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/10</span><a class="archive-post-title" href= "/2021/06/10/MPA%E4%B8%8ECOPA%E6%80%BB%E7%BB%93/" >MPA与COPA总结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">06/04</span><a class="archive-post-title" href= "/2021/06/04/Java%E2%80%94%E2%80%94socket%E4%B8%8E%E7%BA%BF%E7%A8%8B/" >Java——socket与线程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/27</span><a class="archive-post-title" href= "/2021/05/27/%E8%B1%86%E7%93%A3%E7%88%AC%E8%99%AB/" >豆瓣爬虫</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/12</span><a class="archive-post-title" href= "/2021/05/12/K8s%E6%9D%83%E5%A8%81%E6%8C%87%E5%8D%97-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" >K8s权威指南-读书笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">05/03</span><a class="archive-post-title" href= "/2021/05/03/pod%E5%86%85%E4%B8%8Eapi-server%E4%BA%A4%E4%BA%92/" >pod内进程与api-server交互</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/26</span><a class="archive-post-title" href= "/2021/04/26/%E3%80%8ADocker%E6%8A%80%E6%9C%AF%E5%85%A5%E9%97%A8%E4%B8%8E%E5%AE%9E%E6%88%98%E3%80%8B%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" >《Docker技术入门与实战》读书笔记</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/20</span><a class="archive-post-title" href= "/2021/04/20/Docker%E7%AC%94%E8%AE%B0/" >Docker Cli常用命令小结</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">04/01</span><a class="archive-post-title" href= "/2021/04/01/minikube-Error-setting-up-host-only-network-on-machine-start/" >minikube--Error setting up host only network on machine start</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/26</span><a class="archive-post-title" href= "/2021/03/26/%E3%80%8A%E7%A0%81%E5%86%9C%E7%BF%BB%E8%BA%AB%E3%80%8B-%E6%88%91%E6%98%AF%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B/" >《码农翻身》——我是一个线程</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/25</span><a class="archive-post-title" href= "/2021/03/25/shell%E6%9F%A5%E8%AF%A2%E5%AE%B9%E5%99%A8%E7%8A%B6%E6%80%81%E5%B9%B6%E9%87%8D%E5%90%AF%E5%AE%B9%E5%99%A8/" >shell查询容器状态并重启容器</a>
+        </li>
+    
+    
+        <li class="archive-post-item">
+            <span class="archive-post-date">03/24</span><a class="archive-post-title" href= "/2021/03/24/%E7%BB%88%E7%AB%AF%E4%BB%A3%E7%90%86%E9%85%8D%E7%BD%AE/" >终端代理配置</a>
+        </li>
+    
+    </div>
+  </div>
+        <div class="sidebar-panel-tags">
+    <div class="sidebar-tags-name">
+    
+        <span class="sidebar-tag-name" data-tags="C++"><span class="iconfont-archer">&#xe606;</span>C++</span>
+    
+        <span class="sidebar-tag-name" data-tags="Docker"><span class="iconfont-archer">&#xe606;</span>Docker</span>
+    
+        <span class="sidebar-tag-name" data-tags="Kubernetes"><span class="iconfont-archer">&#xe606;</span>Kubernetes</span>
+    
+        <span class="sidebar-tag-name" data-tags="弹性伸缩"><span class="iconfont-archer">&#xe606;</span>弹性伸缩</span>
+    
+        <span class="sidebar-tag-name" data-tags="Openstack"><span class="iconfont-archer">&#xe606;</span>Openstack</span>
+    
+        <span class="sidebar-tag-name" data-tags="minikube"><span class="iconfont-archer">&#xe606;</span>minikube</span>
+    
+        <span class="sidebar-tag-name" data-tags="shell"><span class="iconfont-archer">&#xe606;</span>shell</span>
+    
+        <span class="sidebar-tag-name" data-tags="微服务组项目"><span class="iconfont-archer">&#xe606;</span>微服务组项目</span>
+    
+        <span class="sidebar-tag-name" data-tags="提升生产力的小技巧"><span class="iconfont-archer">&#xe606;</span>提升生产力的小技巧</span>
+    
+        <span class="sidebar-tag-name" data-tags="码农翻身"><span class="iconfont-archer">&#xe606;</span>码农翻身</span>
+    
+        <span class="sidebar-tag-name" data-tags="protobuf"><span class="iconfont-archer">&#xe606;</span>protobuf</span>
+    
+        <span class="sidebar-tag-name" data-tags="爬虫"><span class="iconfont-archer">&#xe606;</span>爬虫</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-tags-empty">&#xe678;</div>
+    <div class="tag-load-fail" style="display: none; color: #ccc; font-size: 0.6rem;">
+    缺失模块。<br/>
+    1、请确保node版本大于6.2<br/>
+    2、在博客根目录（注意不是archer根目录）执行以下命令：<br/>
+    <span style="color: #f75357; font-size: 1rem; line-height: 2rem;">npm i hexo-generator-json-content --save</span><br/>
+    3、在根目录_config.yml里添加配置：
+    <pre style="color: #787878; font-size: 0.6rem;">
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: true
+    tags: true</pre>
+    </div> 
+    <div class="sidebar-tags-list"></div>
+</div>
+        <div class="sidebar-panel-categories">
+    <div class="sidebar-categories-name">
+    
+        <span class="sidebar-category-name" data-categories="技术笔记"><span class="iconfont-archer">&#xe60a;</span>技术笔记</span>
+    
+        <span class="sidebar-category-name" data-categories="读书笔记"><span class="iconfont-archer">&#xe60a;</span>读书笔记</span>
+    
+    </div>
+    <div class="iconfont-archer sidebar-categories-empty">&#xe678;</div>
+    <div class="sidebar-categories-list"></div>
+</div>
+    </div>
+</div> 
+    <script>
+    var siteMeta = {
+        root: "/",
+        author: "John Doe"
+    }
+</script>
+    <!-- CDN failover -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        if (typeof window.$ === 'undefined')
+        {
+            console.warn('jquery load from jsdelivr failed, will load local script')
+            document.write('<script src="/lib/jquery.min.js">\x3C/script>')
+        }
+    </script>
+    <script src="/scripts/main.js"></script>
+    <!-- algolia -->
+    
+    <!-- busuanzi  -->
+    
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    
+    <!-- CNZZ  -->
+    
+    </div>
+    <!-- async load share.js -->
+    
+        <script src="/scripts/share.js" async></script>    
+     
+    </body>
+</html>
+
+
